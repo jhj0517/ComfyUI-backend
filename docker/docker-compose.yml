@@ -23,6 +23,8 @@ services:
       - "8188:8188"
     volumes:
       - ../ComfyUI/models:/app/models
+      - ../ComfyUI/input:/app/input
+      - ../ComfyUI/output:/app/output
     deploy:
       resources:
         reservations:

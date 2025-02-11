@@ -33,6 +33,9 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Copy ComfyUI application
 COPY ComfyUI/ .
 
+# Set Volumes
+VOLUME ["/app/input", "/app/output"]
+
 # Expose the port
 EXPOSE 8188
 
