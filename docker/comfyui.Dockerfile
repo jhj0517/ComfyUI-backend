@@ -1,17 +1,36 @@
-FROM python:3.10-slim
-
+# Builder stage
+FROM python:3.10-slim as builder
 WORKDIR /app
 
-# Install system dependencies
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     git \
     && rm -rf /var/lib/apt/lists/*
 
 # Install ComfyUI requirements
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 COPY ComfyUI/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+
+# Runtime stage
+FROM python:3.10-slim as runtime
+
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy venv from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy ComfyUI application
 COPY ComfyUI/ .
 
 # Expose the port
