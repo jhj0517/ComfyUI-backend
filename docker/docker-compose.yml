@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/backend.Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - COMFY_API_HOST=comfyui
+      - COMFY_API_PORT=8188
+    volumes:
+      - ../backend/workflows:/app/workflows
+    depends_on:
+      - comfyui
+
+  comfyui:
+    build: 
+      context: ..
+      dockerfile: docker/comfyui.Dockerfile
+    ports:
+      - "8188:8188"
+    volumes:
+      - ../ComfyUI/models:/app/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu] 
