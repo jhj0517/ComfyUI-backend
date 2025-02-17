@@ -1,4 +1,4 @@
-# Builder stage
+### Builder stage ###
 FROM python:3.10-slim as builder
 
 WORKDIR /app
@@ -16,19 +16,17 @@ COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 
-# Runtime stage
+### Runtime stage ###
 FROM python:3.10-slim as runtime
 
 WORKDIR /app
 
-# Copy venv from builder
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy application
 COPY backend/ .
 
-# Expose the port
+# Set Port
 EXPOSE 8000
 
 # Deploy the application
