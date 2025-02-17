@@ -22,4 +22,5 @@ kornia>=0.7.1; platform_system == "linux"
 spandrel
 soundfile
 
+### Backend ###
 ./backend/requirements.txt
