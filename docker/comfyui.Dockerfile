@@ -1,4 +1,4 @@
-# Builder stage
+### Builder stage ###
 FROM python:3.10-slim as builder
 WORKDIR /app
 
@@ -16,7 +16,7 @@ COPY ComfyUI/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 
-# Runtime stage
+### Runtime stage ###
 FROM python:3.10-slim as runtime
 
 WORKDIR /app
@@ -26,17 +26,15 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy venv from builder
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# Copy ComfyUI application
 COPY ComfyUI/ .
 
 # Set Volumes
 VOLUME ["/app/input", "/app/output"]
 
-# Expose the port
+# Set Port
 EXPOSE 8188
 
 # Run ComfyUI
