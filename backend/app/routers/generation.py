@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Dict, Any
+from fastapi import APIRouter, HTTPException, Body
+from pydantic import BaseModel, Field
+from typing import Dict, Any, Optional
 from ..workflows.workflow_registry import workflow_registry
 from ..exceptions import WorkflowNotFoundError, WorkflowValidationError
 
@@ -10,12 +10,48 @@ router = APIRouter(
     responses={404: {"description": "Workflow not found"}},
 )
 
-class GenerationRequest(BaseModel):
-    workflow_name: str
-    modifications: Dict[str, Dict[str, Any]]
+class ModificationValue(BaseModel):
+    """Represents a modification value for a workflow node parameter."""
+    value: Any = Field(..., description="The value to set for this parameter")
+    
+class NodeModification(BaseModel):
+    """Represents modifications for a specific node."""
+    __root__: Dict[str, Any] = Field(..., description="Parameters to modify for this node")
 
-@router.post("", summary="Generate output from a workflow")
-async def generate(request: GenerationRequest):
+class GenerationRequest(BaseModel):
+    """Request model for workflow generation."""
+    workflow_name: str = Field(..., description="Name of the workflow to execute")
+    modifications: Dict[str, Dict[str, Any]] = Field(
+        ..., 
+        description="Dictionary of modifications to apply to the workflow",
+        example={
+            "node_1": {
+                "param1": "value1",
+                "param2": 42
+            },
+            "node_2": {
+                "param3": "value3"
+            }
+        }
+    )
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "workflow_name": "basic",
+                "modifications": {
+                    "4": {
+                        "text": "a photo of a cat"
+                    },
+                    "7": {
+                        "seed": 42
+                    }
+                }
+            }
+        }
+
+@router.post("", summary="Generate output from a workflow", response_model_exclude_none=True)
+async def generate(request: GenerationRequest = Body(..., description="Generation request parameters")):
     """
     Generate output by executing a specified workflow with optional modifications.
     
