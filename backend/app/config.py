@@ -9,9 +9,3 @@ class Settings(BaseSettings):
         return f"http://{self.COMFY_API_HOST}:{self.COMFY_API_PORT}"
 
 settings = Settings() 
-
-class WorkflowNotFoundError(Exception):
-    pass
-
-class WorkflowValidationError(Exception):
-    pass 
