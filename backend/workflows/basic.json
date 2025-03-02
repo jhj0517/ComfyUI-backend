@@ -17,7 +17,7 @@
     "4": {
         "class_type": "CheckpointLoaderSimple",
         "inputs": {
-            "ckpt_name": "v1-5-pruned-emaonly.safetensors"
+            "ckpt_name": "sdxl_model.safetensors"
         }
     },
     "5": {
