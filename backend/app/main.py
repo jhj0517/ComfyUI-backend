@@ -1,45 +1,21 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import Dict, Any
-from .workflows.workflow_registry import workflow_registry
-from .exceptions import WorkflowNotFoundError, WorkflowValidationError
+from fastapi import FastAPI
+from .routers import generation, workflows, system
 
-app = FastAPI(title="ComfyUI API Wrapper")
+app = FastAPI(title="ComfyUI API Wrapper", 
+              description="API for interacting with ComfyUI workflows",
+              version="0.1.0")
 
-class GenerationRequest(BaseModel):
-    workflow_name: str
-    modifications: Dict[str, Dict[str, Any]]
+app.include_router(generation.router)
+app.include_router(workflows.router)
+app.include_router(system.router)
 
-@app.post("/generate")
-async def generate(request: GenerationRequest):
-    try:
-        workflow = workflow_registry.get_workflow(request.workflow_name)
-        workflow.execute(modifications=request.modifications)
-        return {"status": "success", "message": "Generation queued"}
-    except WorkflowNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except WorkflowValidationError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/workflows/{name}/nodes")
-async def get_workflow_nodes(name: str):
-    """Get information about nodes in a workflow"""
-    try:
-        workflow = workflow_registry.get_workflow(name)
-        return {
-            "nodes": {
-                node_id: {
-                    "class_type": node["class_type"],
-                    "inputs": node.get("inputs", {})
-                }
-                for node_id, node in workflow.workflow.items()
-            }
-        }
-    except WorkflowNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy"} 
+@app.get("/", tags=["root"])
+async def root():
+    """
+    Root endpoint providing API information.
+    """
+    return {
+        "message": "Welcome to ComfyUI API Wrapper",
+        "docs_url": "/docs",
+        "redoc_url": "/redoc"
+    } 
