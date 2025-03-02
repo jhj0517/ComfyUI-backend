@@ -7,6 +7,18 @@ The compose will run both `backend.Dockerfile` and `comfyui.Dockerfile`
 docker compose -f docker/docker-compose.yml up --build
 ```
 
+The ComfyUI is deployed by default to
+```
+http://localhost:8188
+```
+
+The fastapi server for the ComfyUI is deployed by default to
+```
+http://localhost:8188
+```
+
+You can change those ports in `docker/docker-compose.yml`
+
 ## Testing (backend)
 ```bash
 cd backend
