@@ -14,8 +14,9 @@ http://localhost:8188
 
 The fastapi server for the ComfyUI is deployed by default to
 ```
-http://localhost:8188
+http://localhost:8000
 ```
+Check the swagger UI docs with http://localhost:8000/docs
 
 You can change those ports in `docker/docker-compose.yml`
 
