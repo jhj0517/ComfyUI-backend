@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 from .base import WorkflowExecutor
 
 class WorkflowRegistry:
@@ -19,5 +19,9 @@ class WorkflowRegistry:
         if name not in self.workflows:
             self.load_workflows()  # Reload workflows in case new ones were added
         return self.workflows[name]
+    
+    def get_workflow_names(self) -> List[str]:
+        return list(self.workflows.keys())
 
-workflow_registry = WorkflowRegistry() 
+workflow_registry = WorkflowRegistry()
+workflow_registry.load_workflows() 
