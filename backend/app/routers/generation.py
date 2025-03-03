@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Body
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, RootModel
 from typing import Dict, Any, Optional
 from ..workflows.workflow_registry import workflow_registry
 from ..exceptions import WorkflowNotFoundError, WorkflowValidationError
@@ -14,9 +14,8 @@ class ModificationValue(BaseModel):
     """Represents a modification value for a workflow node parameter."""
     value: Any = Field(..., description="The value to set for this parameter")
     
-class NodeModification(BaseModel):
-    """Represents modifications for a specific node."""
-    __root__: Dict[str, Any] = Field(..., description="Parameters to modify for this node")
+class NodeModification(RootModel):
+    root: Dict[str, Any]  
 
 class GenerationRequest(BaseModel):
     """Request model for workflow generation."""
