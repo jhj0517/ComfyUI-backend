@@ -32,7 +32,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY ComfyUI/ .
 
 # Set Volumes
-VOLUME ["/app/input", "/app/output"]
+VOLUME ["/app/input", "/app/output", "/app/models"]
 
 # Set Port
 EXPOSE 8188
