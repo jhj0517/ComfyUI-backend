@@ -6,6 +6,12 @@ The compose will run both `backend.Dockerfile` and `comfyui.Dockerfile`
 ```bash
 docker compose -f docker/docker-compose.yml up --build
 ```
+When running the container, just remove `--build` at the end.
+
+And when you made changes to backend and re-build backend only, do:
+```bash
+docker compose -f docker/docker-compose.yml build backend
+```
 
 The ComfyUI is deployed by default to
 ```
