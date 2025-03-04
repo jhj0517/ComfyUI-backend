@@ -4,6 +4,7 @@ import uuid
 import websocket
 import threading
 import logging
+import functools
 
 from app.config import settings
 from app.logging import get_logger
@@ -163,3 +164,18 @@ class ComfyUIClient:
         except Exception as e:
             logger.error(f"Error getting history: {e}")
             return None
+
+@functools.lru_cache(maxsize=1)
+def get_comfy_client() -> ComfyUIClient:
+    """
+    Get the ComfyUIClient singleton instance.
+    
+    This function uses lru_cache to ensure only one instance is created.
+    
+    Returns:
+        ComfyUIClient: The singleton instance
+    """
+    return ComfyUIClient()
+
+get_comfy_client()
+        
