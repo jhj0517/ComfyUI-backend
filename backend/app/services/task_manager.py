@@ -35,6 +35,7 @@ class Task(BaseModel):
     created_at: datetime
     updated_at: datetime
     result: Optional[Dict[str, Any]] = None
+    prompt_id: Optional[str] = None
     
     def to_redis_dict(self) -> Dict[str, str]:
         """Convert to a dict suitable for Redis storage"""
@@ -46,21 +47,23 @@ class Task(BaseModel):
             "progress": str(self.progress),
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
-            "result": json.dumps(self.result) if self.result else None
+            "result": json.dumps(self.result) if self.result else "",
+            "prompt_id": self.prompt_id if self.prompt_id else ""
         }
     
     @classmethod
     def from_redis_dict(cls, data: Dict[str, str]) -> "Task":
-        """Create Task from Redis dictionary"""
+        """Create a Task instance from Redis data"""
         return cls(
             id=data["id"],
             workflow_name=data["workflow_name"],
-            parameters=json.loads(data["parameters"]),
+            parameters=json.loads(data["parameters"]) if data["parameters"] else {},
             status=TaskStatus(data["status"]),
             progress=int(data["progress"]),
             created_at=datetime.fromisoformat(data["created_at"]),
             updated_at=datetime.fromisoformat(data["updated_at"]),
-            result=json.loads(data["result"]) if data.get("result") else None
+            result=json.loads(data["result"]) if data["result"] else None,
+            prompt_id=data["prompt_id"] if data["prompt_id"] else None
         )
 
 class TaskManager:
@@ -201,6 +204,50 @@ class TaskManager:
         except redis.RedisError as e:
             logger.error(f"Redis error retrieving task: {e}")
             return None
+
+    def get_task_by_prompt_id(self, prompt_id: str) -> Optional[Task]:
+        """Get task by prompt_id
+        
+        Args:
+            prompt_id: The ComfyUI prompt ID to search for
+            
+        Returns:
+            Optional[Task]: Task object if found, None otherwise
+        """
+        try:
+            # Get all task keys
+            task_keys = self.redis.keys("task:*")
+            
+            for key in task_keys:
+                task_data = self.redis.hgetall(key)
+                if task_data.get("prompt_id") == prompt_id:
+                    return Task.from_redis_dict(task_data)
+                
+            logger.debug(f"No task found with prompt_id {prompt_id}")
+            return None
+        except redis.RedisError as e:
+            logger.error(f"Redis error retrieving task by prompt_id: {e}")
+            return None
+
+    def get_all_tasks(self) -> List[Task]:
+        """Get all tasks from Redis
+        
+        Returns:
+            List[Task]: List of all tasks
+        """
+        try:
+            task_keys = self.redis.keys("task:*")
+            tasks = []
+            
+            for key in task_keys:
+                task_data = self.redis.hgetall(key)
+                if task_data:
+                    tasks.append(Task.from_redis_dict(task_data))
+                    
+            return tasks
+        except redis.RedisError as e:
+            logger.error(f"Redis error retrieving all tasks: {e}")
+            return []
 
 
 @functools.lru_cache(maxsize=1)
