@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from urllib import request
 from ..config import settings
-from ..exceptions import WorkflowNotFoundError, WorkflowValidationError
+from ..exceptions import WorkflowNotFoundError, WorkflowValidationError, WorkflowModificationError
 
 class WorkflowExecutor:
     def __init__(self, workflow_path: str):
