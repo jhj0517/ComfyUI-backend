@@ -249,6 +249,71 @@ class TaskManager:
             logger.error(f"Redis error retrieving all tasks: {e}")
             return []
 
+    def update_prompt_id(self, task_id: str, prompt_id: str) -> bool:
+        """
+        Update a task's prompt_id after queueing with ComfyUI.
+        
+        Args:
+            task_id: ID of the task to update
+            prompt_id: The ComfyUI prompt ID to associate with this task
+            
+        Returns:
+            bool: True if update was successful, False otherwise
+        """
+        key = f"task:{task_id}"
+        
+        try:
+            task_data = self.redis.hgetall(key)
+            if not task_data:
+                logger.warning(f"Task {task_id} not found for prompt_id update")
+                return False
+            
+            task = Task.from_redis_dict(task_data)
+            
+            task.prompt_id = prompt_id
+            task.updated_at = datetime.now()
+            
+            self.redis.hset(key, mapping=task.to_redis_dict())
+            self.redis.expire(key, self.ttl)
+            logger.debug(f"Updated task {task_id} with prompt_id {prompt_id}")
+            return True
+        except redis.RedisError as e:
+            logger.error(f"Redis error updating task prompt_id: {e}")
+            return False
+
+    def update_task_parameters(self, task_id: str, parameters: Dict[str, Any]) -> bool:
+        """
+        Update a task's parameters.
+        
+        Args:
+            task_id: ID of the task to update
+            parameters: New parameters to merge with existing ones
+            
+        Returns:
+            bool: True if update was successful, False otherwise
+        """
+        key = f"task:{task_id}"
+        
+        try:
+            task_data = self.redis.hgetall(key)
+            if not task_data:
+                logger.warning(f"Task {task_id} not found for parameters update")
+                return False
+            
+            task = Task.from_redis_dict(task_data)
+            
+            # Merge the new parameters with existing ones
+            task.parameters.update(parameters)
+            task.updated_at = datetime.now()
+            
+            self.redis.hset(key, mapping=task.to_redis_dict())
+            self.redis.expire(key, self.ttl)
+            logger.debug(f"Updated parameters for task {task_id}")
+            return True
+        except redis.RedisError as e:
+            logger.error(f"Redis error updating task parameters: {e}")
+            return False
+
 
 @functools.lru_cache(maxsize=1)
 def get_task_manager(redis_url: Optional[str] = None, ttl: Optional[int] = None) -> TaskManager:
