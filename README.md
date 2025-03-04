@@ -1,6 +1,9 @@
 # ComfyUI backend
 Backend for ComfyUI
 
+## Archictecture
+(ComfyUI <-> ComfyUI-fastapi-Wrapper) <-  Reverse Proxy (API) <- Your Front End
+
 ## Installation & Run
 The compose will run both `backend.Dockerfile` and `comfyui.Dockerfile`
 ```bash
@@ -26,6 +29,7 @@ Check the swagger UI docs with http://localhost:8000/docs
 
 You can change those ports in `docker/docker-compose.yml`
 
++) If you want to test them locally, you can use requirements-cuda.txt or requirements-cuda.txt
 ## Testing (backend)
 ```bash
 cd backend
