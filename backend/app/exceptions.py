@@ -1,7 +1,9 @@
 class WorkflowNotFoundError(Exception):
+    """Raised when a workflow file is not found."""
     pass
 
 class WorkflowValidationError(Exception):
+    """Raised when error happens while opening a workflow file."""
     pass
 
 class WorkflowModificationError(Exception):
