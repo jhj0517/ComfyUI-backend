@@ -10,10 +10,13 @@ services:
     environment:
       - COMFY_API_HOST=comfyui
       - COMFY_API_PORT=8188
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     volumes:
       - ../backend/workflows:/app/workflows
     depends_on:
       - comfyui
+      - redis
 
   comfyui:
     build: 
@@ -31,4 +34,12 @@ services:
           devices:
             - driver: nvidia
               count: 1
-              capabilities: [gpu] 
+              capabilities: [gpu]
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - ../redis-data:/data
+    command: redis-server --appendonly yes
