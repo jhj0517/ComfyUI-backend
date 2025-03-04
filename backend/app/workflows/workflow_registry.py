@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Dict, List
 from .base import WorkflowExecutor
+from ..exceptions import WorkflowNotFoundError
 
 class WorkflowRegistry:
     def __init__(self):
@@ -18,6 +19,10 @@ class WorkflowRegistry:
         """Get a workflow executor by name"""
         if name not in self.workflows:
             self.load_workflows()  # Reload workflows in case new ones were added
+            
+        if name not in self.workflows:
+            raise WorkflowNotFoundError(f"Workflow '{name}' not found")
+            
         return self.workflows[name]
     
     def get_workflow_names(self) -> List[str]:
