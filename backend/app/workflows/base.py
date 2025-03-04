@@ -40,6 +40,32 @@ class WorkflowExecutor:
             if node.get("class_type") == class_type
         }
     
+    def update_workflow(self, modifications: Optional[Dict[str, Dict[str, Any]]] = None) -> Dict[str, Any]:
+        """
+        Apply modifications to the workflow and return the updated workflow
+        
+        Args:
+            modifications: Dict[node_id, Dict[param_name, value]]
+            Example:
+            {
+                "3": {"seed": 42, "steps": 20},
+                "6": {"text": "a photo of a cat"}
+            }
+            
+        Returns:
+            Dict[str, Any]: The updated workflow
+        """
+        workflow = self.workflow.copy()
+        
+        if modifications:
+            for node_id, updates in modifications.items():
+                if node_id in workflow:
+                    if "inputs" not in workflow[node_id]:
+                        workflow[node_id]["inputs"] = {}
+                    workflow[node_id]["inputs"].update(updates)
+        
+        return workflow
+
     def execute(self, modifications: Optional[Dict[str, Dict[str, Any]]] = None) -> None:
         """
         Execute the workflow with given modifications
@@ -52,15 +78,7 @@ class WorkflowExecutor:
                 "6": {"text": "a photo of a cat"}
             }
         """
-        workflow = self.workflow.copy()
-        
-        if modifications:
-            for node_id, updates in modifications.items():
-                if node_id in workflow:
-                    if "inputs" not in workflow[node_id]:
-                        workflow[node_id]["inputs"] = {}
-                    workflow[node_id]["inputs"].update(updates)
-        
+        workflow = self.update_workflow(modifications)
         self._queue_prompt(workflow)
     
     def _queue_prompt(self, prompt: Dict[str, Any]) -> None:
