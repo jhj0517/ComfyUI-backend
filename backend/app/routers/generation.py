@@ -9,13 +9,12 @@ router = APIRouter(
     tags=["generation"],
     responses={404: {"description": "Workflow not found"}},
 )
-
 class GenerationRequest(BaseModel):
     """Request model for workflow generation."""
-    workflow_name: str = Field(..., description="Name of the workflow to execute")
+    workflow_name: str = Field(..., description="Name of the workflow file to execute")
     modifications: Dict[str, Dict[str, Any]] = Field(
         ..., 
-        description="Dictionary of modifications to apply to the workflow",
+        description="Json of modifications to apply to the workflow",
         example={
             "node_1": {
                 "param1": "value1",
