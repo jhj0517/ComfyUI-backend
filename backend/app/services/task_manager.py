@@ -46,7 +46,7 @@ class Task(BaseModel):
 
 class TaskManager:
     def __init__(self, redis_url: Optional[str] = None, ttl: Optional[int] = None):
-        """Initialize the task manager with Redis connection
+        """Initialize the task manager with Redis
         
         Args:
             redis_url: Optional Redis URL (defaults to settings.REDIS_URL)
@@ -111,7 +111,7 @@ class TaskManager:
             task = Task.from_redis_dict(task_data)
             
             task.progress = max(0, min(100, progress))  
-            task.updated_at = datetime.utcnow()
+            task.updated_at = datetime.now()
             
             self.redis.hset(key, mapping=task.to_redis_dict())
             return True
