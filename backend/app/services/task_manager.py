@@ -4,6 +4,7 @@ from datetime import datetime
 import redis
 from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
+import functools
 
 from app.config import settings
 
@@ -57,6 +58,7 @@ class TaskManager:
             decode_responses=True
         )
         self.ttl = ttl or settings.TASK_TTL_SECONDS
+        print(f"Redis for task initialized to {redis_url or settings.REDIS_URL}")
         
     def create_task(self, workflow_name: str, parameters: Dict[str, Any]) -> Task:
         """Create a new task and store it in Redis
@@ -176,3 +178,22 @@ class TaskManager:
         except redis.RedisError as e:
             print(f"Redis get error: {e}")
             return None
+
+
+@functools.lru_cache(maxsize=1)
+def get_task_manager(redis_url: Optional[str] = None, ttl: Optional[int] = None) -> TaskManager:
+    """
+    Get the TaskManager singleton instance.
+    
+    This function uses lru_cache to ensure only one instance is created.
+    
+    Args:
+        redis_url: Optional Redis URL (defaults to settings.REDIS_URL)
+        ttl: Optional TTL in seconds (defaults to settings.TASK_TTL_SECONDS)
+    
+    Returns:
+        TaskManager: The singleton instance
+    """
+    return TaskManager(redis_url, ttl)
+
+task_manager = get_task_manager()
