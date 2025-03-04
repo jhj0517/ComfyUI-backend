@@ -9,7 +9,7 @@ class WorkflowRegistry:
         self.workflows_dir = Path("workflows")
     
     def load_workflows(self):
-        """Load all workflow JSON files from the workflows directory"""
+        """Load all workflow JSON files from the workflows directory. Reload workflows in case new ones were added"""
         self.workflows.clear()
         for workflow_file in self.workflows_dir.glob("*.json"):
             workflow_name = workflow_file.stem
@@ -18,7 +18,7 @@ class WorkflowRegistry:
     def get_workflow(self, name: str) -> WorkflowExecutor:
         """Get a workflow executor by name"""
         if name not in self.workflows:
-            self.load_workflows()  # Reload workflows in case new ones were added
+            self.load_workflows()  
             
         if name not in self.workflows:
             raise WorkflowNotFoundError(f"Workflow '{name}' not found")
