@@ -12,6 +12,7 @@ class Task(BaseModel):
     workflow_name: str
     parameters: Dict[str, Any]
     status: str
+    progress: int = 0  
     created_at: datetime
     updated_at: datetime
     result: Optional[Dict[str, Any]] = None
@@ -23,6 +24,7 @@ class Task(BaseModel):
             "workflow_name": self.workflow_name,
             "parameters": json.dumps(self.parameters),
             "status": self.status,
+            "progress": str(self.progress),
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat(),
             "result": json.dumps(self.result) if self.result else None
@@ -36,6 +38,8 @@ class Task(BaseModel):
             parsed["parameters"] = json.loads(parsed["parameters"])
         if parsed.get("result"):
             parsed["result"] = json.loads(parsed["result"])
+        if "progress" in parsed:
+            parsed["progress"] = int(parsed["progress"])
         parsed["created_at"] = datetime.fromisoformat(parsed["created_at"])
         parsed["updated_at"] = datetime.fromisoformat(parsed["updated_at"])
         return cls(**parsed)
@@ -72,6 +76,7 @@ class TaskManager:
             workflow_name=workflow_name,
             parameters=parameters,
             status="queued",
+            progress=0,
             created_at=now,
             updated_at=now
         )
@@ -84,6 +89,35 @@ class TaskManager:
         except redis.RedisError as e:
             print(f"Redis error: {e}")
             return task
+        
+    def update_task_progress(self, task_id: str, progress: int) -> bool:
+        """
+        Update a task's progress percentage.
+        
+        Args:
+            task_id: ID of the task to update
+            progress: Progress percentage (0-100)
+            
+        Returns:
+            bool: True if update was successful, False otherwise
+        """
+        key = f"task:{task_id}"
+        
+        try:
+            task_data = self.redis.hgetall(key)
+            if not task_data:
+                return False
+                
+            task = Task.from_redis_dict(task_data)
+            
+            task.progress = max(0, min(100, progress))  
+            task.updated_at = datetime.utcnow()
+            
+            self.redis.hset(key, mapping=task.to_redis_dict())
+            return True
+        except redis.RedisError as e:
+            print(f"Redis update error: {e}")
+            return False
         
     def update_task_status(self, task_id: str, status: str, result: Optional[Dict[str, Any]] = None) -> bool:
         """Update a task's status and optionally store results
@@ -106,9 +140,15 @@ class TaskManager:
             task = Task.from_redis_dict(task_data)
             
             task.status = status
-            task.updated_at = datetime.utcnow()
+            task.updated_at = datetime.now()
+            
+            if status == "completed":
+                task.progress = 100
+            elif status == "failed":
+                pass
+                
             if result:
-                task.result = result
+                task.result = result if task.result is None else {**task.result, **result}
                 
             self.redis.hset(key, mapping=task.to_redis_dict())
             return True
