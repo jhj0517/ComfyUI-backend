@@ -8,6 +8,9 @@ from enum import Enum, auto
 import functools
 
 from app.config import settings
+from app.logging import get_logger
+
+logger = get_logger()
 
 
 class TaskStatus(str, Enum):
@@ -73,7 +76,7 @@ class TaskManager:
             decode_responses=True
         )
         self.ttl = ttl or settings.TASK_TTL_SECONDS
-        print(f"Redis for task initialized to {redis_url or settings.REDIS_URL}")
+        logger.info(f"Redis for task initialized to {redis_url or settings.REDIS_URL}")
         
     def create_task(self, workflow_name: str, parameters: Dict[str, Any]) -> Task:
         """
@@ -93,17 +96,22 @@ class TaskManager:
             id=task_id,
             workflow_name=workflow_name,
             parameters=parameters,
-            status=TaskStatus.QUEUED,  
+            status=TaskStatus.QUEUED,
             progress=0,
             created_at=now,
             updated_at=now
         )
         
-        self.redis.hset(f"task:{task_id}", mapping=task.to_redis_dict())
-        self.redis.expire(f"task:{task_id}", self.ttl)
-        
-        return task
-        
+        try:
+            key = f"task:{task_id}"
+            self.redis.hset(key, mapping=task.to_redis_dict())
+            self.redis.expire(key, self.ttl)
+            logger.debug(f"Created task {task_id} for workflow {workflow_name}")
+            return task
+        except redis.RedisError as e:
+            logger.error(f"Redis error creating task: {e}")
+            return task
+    
     def update_task_progress(self, task_id: str, progress: int) -> bool:
         """
         Update a task's progress percentage.
@@ -120,6 +128,7 @@ class TaskManager:
         try:
             task_data = self.redis.hgetall(key)
             if not task_data:
+                logger.warning(f"Task {task_id} not found for progress update")
                 return False
                 
             task = Task.from_redis_dict(task_data)
@@ -128,9 +137,10 @@ class TaskManager:
             task.updated_at = datetime.now()
             
             self.redis.hset(key, mapping=task.to_redis_dict())
+            logger.debug(f"Updated task {task_id} progress to {progress}%")
             return True
         except redis.RedisError as e:
-            print(f"Redis update error: {e}")
+            logger.error(f"Redis error updating task progress: {e}")
             return False
         
     def update_task_status(self, task_id: str, status: str, result: Optional[Dict[str, Any]] = None) -> bool:
@@ -150,7 +160,7 @@ class TaskManager:
             task_data = self.redis.hgetall(task_key)
             
             if not task_data:
-                print(f"Task {task_id} not found")
+                logger.warning(f"Task {task_id} not found for status update")
                 return False
             
             status_enum = status if isinstance(status, TaskStatus) else TaskStatus(status)
@@ -164,9 +174,10 @@ class TaskManager:
             self.redis.hset(task_key, mapping=task_data)
             self.redis.expire(task_key, self.ttl)
             
+            logger.debug(f"Updated task {task_id} status to {status_enum.value}")
             return True
         except Exception as e:
-            print(f"Redis update error: {e}")
+            logger.error(f"Redis error updating task status: {e}")
             return False
             
     def get_task(self, task_id: str) -> Optional[Task]:
@@ -183,11 +194,12 @@ class TaskManager:
         try:
             task_data = self.redis.hgetall(key)
             if not task_data:
+                logger.debug(f"Task {task_id} not found")
                 return None
                 
             return Task.from_redis_dict(task_data)
         except redis.RedisError as e:
-            print(f"Redis get error: {e}")
+            logger.error(f"Redis error retrieving task: {e}")
             return None
 
 
