@@ -7,6 +7,9 @@ import mimetypes
 import uuid
 from urllib.parse import urljoin
 import functools
+import json
+import tempfile
+import traceback
 
 from ..config import settings
 from ..logging import get_logger
@@ -21,19 +24,22 @@ class S3Service:
         self.enabled = settings.S3_STORAGE_ENABLED
         
         if not self.enabled:
-            logger.info("S3 storage is disabled, using local URLs")
+            logger.warning("S3 storage is disabled, using local URLs")
             return
             
-        self.s3_client = boto3.client(
-            's3',
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-            region_name=settings.AWS_REGION
-        )
-        self.bucket_name = settings.S3_BUCKET_NAME
-        self.s3_prefix = settings.S3_PREFIX
-        
-        logger.info(f"S3 service initialized with bucket: {self.bucket_name}")
+        try:
+            self.s3_client = boto3.client(
+                's3',
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_REGION
+            )
+            self.bucket_name = settings.S3_BUCKET_NAME
+            self.s3_prefix = settings.S3_PREFIX
+            logger.info(f"S3 service initialized with bucket: {self.bucket_name}")
+        except Exception as e:
+            logger.error(f"Error connecting to S3, disabling S3 storage: {str(e)}")
+            self.enabled = False
     
     def upload_image(self, image_path: str, subfolder: str = None) -> Dict[str, str]:
         """
@@ -47,6 +53,7 @@ class S3Service:
             Dict with URLs for the uploaded image
         """
         if not self.enabled:
+            logger.warning("S3 is disabled, returning local URL only")
             # Return local URL if S3 is disabled
             return {
                 "url": image_path,
@@ -56,6 +63,14 @@ class S3Service:
         try:
             filename = os.path.basename(image_path)
             content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
+            
+            if not os.path.exists(image_path):
+                return {
+                    "url": image_path,
+                    "error": f"File does not exist: {image_path}"
+                }
+            
+            file_size = os.path.getsize(image_path)
             
             s3_key = self._generate_s3_key(filename, subfolder)
             
@@ -69,26 +84,38 @@ class S3Service:
             )
             
             s3_url = f"https://{self.bucket_name}.s3.amazonaws.com/{s3_key}"
-                
             logger.info(f"Successfully uploaded {filename} to S3: {s3_url}")
             
-            return {
+            result = {
                 "filename": filename,
+                "url": s3_url,
                 "s3_url": s3_url,
                 "s3_key": s3_key
             }
+            return result
             
         except ClientError as e:
-            logger.error(f"Error uploading {image_path} to S3: {e}")
+            error_message = str(e)
+            # Return local URL as fallback
+            result = {
+                "url": image_path,
+                "error": error_message
+            }
+            logger.warning(f"Returning error result: {json.dumps(result, indent=2)}")
+            return result
+        except Exception as e:
+            error_message = str(e)
+            logger.warning(f"Unexpected error during upload: {error_message}")
+            logger.warning(f"Traceback: {traceback.format_exc()}")
             # Return local URL as fallback
             return {
                 "url": image_path,
-                "error": str(e)
+                "error": error_message
             }
     
     def process_comfyui_images(self, prompt_id: str, image_data: Dict[str, List[Dict[str, str]]], cleanup: bool = False) -> Dict[str, List[Dict[str, str]]]:
         """
-        Process ComfyUI output images - upload them to S3 if enabled.
+        Process ComfyUI image data, upload images to S3, and update URLs.
         
         Args:
             prompt_id: The ComfyUI prompt ID
@@ -97,11 +124,11 @@ class S3Service:
             
         Returns:
             Modified image data with S3 URLs
-        """
+        """        
         if not self.enabled:
             logger.info("S3 storage disabled, skipping image upload")
             return image_data
-            
+        
         try:
             result = {}
             
