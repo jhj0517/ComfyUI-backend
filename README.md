@@ -30,6 +30,13 @@ Check the swagger UI docs with http://localhost:8000/docs
 You can change those ports in `docker/docker-compose.yml`
 
 +) If you want to test them locally, you can use requirements-cuda.txt or requirements-cuda.txt
+
+## Workflows
+
+The workflows are placed in backend/workflows.
+And the workflow must be **API compatible** format.
+
+
 ## Testing (backend)
 ```bash
 cd backend
