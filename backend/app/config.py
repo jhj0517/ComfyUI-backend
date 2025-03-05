@@ -1,7 +1,11 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 import uuid
 import os
 from typing import Optional
+
+
+backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DOTENV = os.path.join(backend_root, ".env")
 
 class Settings(BaseSettings):
     """
@@ -35,13 +39,10 @@ class Settings(BaseSettings):
     def REDIS_URL(self) -> str:
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
-    class Config:
-        """
-        This automatically loads .env file and registers environment variables with pydantic.
-        """
-        backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        
-        env_file = os.path.join(backend_root, ".env")
-        env_file_encoding = "utf-8"
+    # Dotenv file manages S3 configuration
+    model_config = SettingsConfigDict(
+        env_file=DOTENV,
+        env_file_encoding="utf-8"
+    )
 
 settings = Settings() 
