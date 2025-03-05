@@ -5,15 +5,16 @@ import websocket
 import threading
 import logging
 import functools
+import time
 
-from app.config import settings
-from app.logging import get_logger
+from ..config import settings
+from ..logging import get_logger
 from ..services.task_manager import get_task_manager, TaskStatus
 
 logger = get_logger()
 
 class ComfyUIClient:
-    """Client for interacting with ComfyUI server."""
+    """Client for interacting with ComfyUI server via WebSocket."""
     
     def __init__(self):
         """Initialize the ComfyUI client with a WebSocket connection to track progress."""
@@ -175,6 +176,7 @@ def get_comfy_client() -> ComfyUIClient:
     Returns:
         ComfyUIClient: The singleton instance
     """
+    time.sleep(10)
     return ComfyUIClient()
 
 get_comfy_client()
