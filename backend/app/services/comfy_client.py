@@ -104,39 +104,63 @@ class ComfyUIClient:
         This is the callback that actually tracks the progress of the workflow.
         """
         try:
-            if isinstance(message, str):
-                data = json.loads(message)
+            # Handle binary data (images)
+            if not isinstance(message, str):
+                logger.debug("Received binary data (likely image)")
+                return
                 
-                prompt_id = None
-                if data['type'] == 'executing':
-                    prompt_id = data['data'].get('prompt_id')
+            data = json.loads(message)
+            message_type = data.get('type')
+            
+            logger.debug(f"Received message type: {message_type}")
+            
+            if message_type == 'progress':
+                msg_data = data['data']
+                prompt_id = msg_data.get('prompt_id')
+                
+                if not prompt_id:
+                    logger.debug("No prompt_id in progress message")
+                    return
+                
+                task = self.task_manager.get_task_by_prompt_id(prompt_id)
+                if not task:
+                    logger.debug(f"No task found for prompt_id {prompt_id}")
+                    return
+                
+                progress = int((msg_data['value'] / msg_data['max']) * 100)
+                self.task_manager.update_task_progress(task.id, progress)
+                logger.debug(f"Updated progress for task {task.id}: {progress}%")
+                
+                if msg_data['value'] == msg_data['max'] and msg_data['max'] > 1:
+                    logger.info(f"Progress complete for prompt {prompt_id}, task {task.id}")
+            
+            elif message_type == 'executing':
+                msg_data = data['data']
+                prompt_id = msg_data.get('prompt_id')
                 
                 if not prompt_id:
                     return
                 
                 task = self.task_manager.get_task_by_prompt_id(prompt_id)
-                
                 if not task:
                     logger.debug(f"No task found for prompt_id {prompt_id}")
                     return
                 
-                task_id = task.id
-                
-                if data['type'] == 'progress':
-                    msg_data = data['data']
-                    progress = int((msg_data['value'] / msg_data['max']) * 100)
-                    self.task_manager.update_task_progress(task_id, progress)
-                    logger.debug(f"Updated progress for task {task_id}: {progress}%")
-                
-                elif data['type'] == 'executing' and data['data']['node'] is None:
-                    logger.info(f"Execution complete for prompt {prompt_id}, task {task_id}")
+                # If node is None, execution is complete
+                if msg_data['node'] is None:
+                    logger.info(f"Execution complete for prompt {prompt_id}, task {task.id}")
                     
                     history = self.get_history(prompt_id)
                     if history and prompt_id in history:
-                        self.task_manager.update_task_status(task_id, TaskStatus.COMPLETED.value)
-                        logger.info(f"Results processed for task {task_id}")
+                        self.task_manager.update_task_status(task.id, TaskStatus.COMPLETED.value)
+                        logger.info(f"Results processed for task {task.id}")
+            
+            elif message_type == 'status':
+                logger.debug(f"Received status update: {data['data']}")
+                
         except Exception as e:
             logger.error(f"Error processing WebSocket message: {e}")
+            logger.exception("Detailed error information:")
     
     def _on_ws_error(self, ws, error):
         """Handle WebSocket errors."""
