@@ -5,7 +5,6 @@ from typing import Literal
 router = APIRouter(
     tags=["system"],
 )
-
 class HealthResponse(BaseModel):
     """Response model for health check endpoint."""
     status: Literal["healthy", "unhealthy"] = Field(..., description="Current health status of the API")
