@@ -12,7 +12,6 @@ class WorkflowExecutor:
             raise WorkflowNotFoundError(f"Workflow file not found: {workflow_path}")
         
         self.workflow = self._load_workflow()
-        self.normalized_nodes = self.normalize_nodes()
     
     def _load_workflow(self) -> Dict[str, Any]:
         """Load workflow from JSON file"""
@@ -22,78 +21,40 @@ class WorkflowExecutor:
         except json.JSONDecodeError as e:
             raise WorkflowValidationError(f"Invalid workflow JSON: {str(e)}")
 
-    def normalize_workflow(self) -> Dict[str, Dict[str, Any]]:
-        """
-        Convert the workflow nodes to a normalized dictionary with string IDs as keys
-
-        For example:
-        {
-            "1": {
-                "id": 1,
-                "type": "ComfyUI.node_input_image",
-                "inputs": [],
-                "outputs": [],
-                "widgets_values": []
-            },
-            "2": {
-                "id": 2,
-                "type": "ComfyUI.node_input_image",
-                "inputs": [],
-                "outputs": [],
-                "widgets_values": []
-            }
-        }
-
-        Returns:
-            Dict[str, Dict[str, Any]]: Dictionary of normalized nodes
-        """
-        if "nodes" not in self.workflow or not isinstance(self.workflow["nodes"], list):
-            raise ValueError("Invalid workflow format: 'nodes' list not found")
-            
-        normalized = {}
-        for node in self.workflow["nodes"]:
-            node_id = str(node["id"])
-            normalized[node_id] = node
-            
-        return normalized
-        
     def modify_node(self, node_id: str, updates: Dict[str, Any]) -> None:
         """
-        Modify a node in the workflow by updating its parameters
+        Modify a specific node's inputs in the workflow
         
-        Args:
-            node_id: The ID of the node to modify
-            updates: A dictionary of parameter names and values to update
-            
-        Raises:
-            ValueError: If the node is not found in the workflow
+        For ComfyUI format:
+        - Updates widget values for inputs with widgets
         """
-        node = None
-        for n in self.workflow["nodes"]:
-            if str(n["id"]) == node_id:
-                node = n
-                break
-        
-        if node is None:
-            raise ValueError(f"Node {node_id} not found in workflow")
-        
-        if "widgets_values" in node and isinstance(node["widgets_values"], list):
-            for key, value in updates.items():
-                widget_index = None
-                if "inputs" in node and isinstance(node["inputs"], list):
-                    for i, input_def in enumerate(node["inputs"]):
-                        if "widget" in input_def and input_def["widget"].get("name") == key:
-                            widget_index = i
-                            break
-                
-                if widget_index is not None and widget_index < len(node["widgets_values"]):
-                    node["widgets_values"][widget_index] = value
+        # Find the node with the matching ID
+        for node in self.workflow["nodes"]:
+            if str(node["id"]) == node_id:
+                # Update widget values if they exist
+                if "widgets_values" in node and isinstance(node["widgets_values"], list):
+                    for key, value in updates.items():
+                        # Find the widget index for this key
+                        widget_index = None
+                        if "inputs" in node and isinstance(node["inputs"], list):
+                            for i, input_def in enumerate(node["inputs"]):
+                                if "widget" in input_def and input_def["widget"].get("name") == key:
+                                    widget_index = i
+                                    break
+                        
+                        # Update the widget value if found
+                        if widget_index is not None and widget_index < len(node["widgets_values"]):
+                            node["widgets_values"][widget_index] = value
+                return
+            
+        # If we get here, the node wasn't found
+        raise ValueError(f"Node {node_id} not found in workflow")
     
     def get_nodes_by_type(self, class_type: str) -> Dict[str, Dict[str, Any]]:
         """Get all nodes of a specific type"""
         return {
-            node_id: node 
-            for node_id, node in self.normalized_nodes.items() 
+            str(node["id"]): node
+            for node in self.workflow["nodes"]
             if node.get("type") == class_type
         }
     
@@ -116,20 +77,20 @@ class WorkflowExecutor:
         
         if modifications:
             for node_id, updates in modifications.items():
-                if node_id in self.normalized_nodes:
-                    node = self.normalized_nodes[node_id]
-                    if "widgets_values" in node and isinstance(node["widgets_values"], list):
-                        for key, value in updates.items():
-                            widget_index = None
-                            if "inputs" in node and isinstance(node["inputs"], list):
-                                for i, input_def in enumerate(node["inputs"]):
-                                    if "widget" in input_def and input_def["widget"].get("name") == key:
-                                        widget_index = i
-                                        break
-                            
-                            # Update the widget value if found
-                            if widget_index is not None and widget_index < len(node["widgets_values"]):
-                                node["widgets_values"][widget_index] = value
+                for node in workflow["nodes"]:
+                    if str(node["id"]) == node_id:
+                        if "widgets_values" in node and isinstance(node["widgets_values"], list):
+                            for key, value in updates.items():
+                                widget_index = None
+                                if "inputs" in node and isinstance(node["inputs"], list):
+                                    for i, input_def in enumerate(node["inputs"]):
+                                        if "widget" in input_def and input_def["widget"].get("name") == key:
+                                            widget_index = i
+                                            break
+                                
+                                if widget_index is not None and widget_index < len(node["widgets_values"]):
+                                    node["widgets_values"][widget_index] = value
+                        break
         
         return workflow
 
