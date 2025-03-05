@@ -176,6 +176,7 @@ def get_comfy_client() -> ComfyUIClient:
     Returns:
         ComfyUIClient: The singleton instance
     """
+    #  Wait for ComfyUI to start
     time.sleep(10)
     return ComfyUIClient()
 
