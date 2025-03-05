@@ -25,6 +25,8 @@ WORKDIR /app
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     git \
+    libgl1 \
+    ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/venv /opt/venv
@@ -33,7 +35,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY ComfyUI/ .
 
 # Set Volumes
-VOLUME ["/app/input", "/app/output", "/app/models"]
+VOLUME ["/app/input", "/app/output", "/app/models", "/app/custom_nodes"]
 
 # Set Port
 EXPOSE 8188
