@@ -8,6 +8,8 @@ services:
     image: comfyui-backend:latest
     ports:
       - "8000:8000"
+    env_file:
+      - ../backend/.env
     environment:
       # ComfyUI Server Configuration
       - COMFY_API_HOST=comfyui
@@ -15,14 +17,6 @@ services:
       # Redis Server Configuration
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      # S3 Configuration
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
-      - AWS_REGION=${AWS_REGION:-us-east-1}
-      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-}
-      - S3_PREFIX=${S3_PREFIX:-images/}
-      - S3_STORAGE_ENABLED=${S3_STORAGE_ENABLED:-false}
-      
     volumes:
       - ../backend/workflows:/app/workflows
     depends_on:
