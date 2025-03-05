@@ -9,6 +9,7 @@ router = APIRouter(
     tags=["workflows"],
     responses={404: {"description": "Workflow not found"}},
 )
+
 class ComfyUIWorkflowNode(BaseModel):
     """Represents a node in a ComfyUI workflow."""
     id: int = Field(..., description="Node ID")
@@ -41,31 +42,15 @@ async def get_workflow_nodes(
 ):
     """
     Get information about nodes in a specified workflow.
-    It returns normalized workflow with string IDs as keys
-
-        For example:
-        {
-            "1": {
-                "id": 1,
-                "type": "ComfyUI.node_input_image",
-                "inputs": [],
-                "outputs": [],
-                "widgets_values": []
-            },
-            "2": {
-                "id": 2,
-                "type": "ComfyUI.node_input_image",
-                "inputs": [],
-                "outputs": [],
-                "widgets_values": []
-            }
-        }
     
     - **name**: Name of the workflow to get information about
     """
     try:
         workflow = workflow_registry.get_workflow(name)
-        nodes = workflow.normalized_nodes
+        
+        nodes = {}
+        for node in workflow.workflow["nodes"]:
+            nodes[str(node["id"])] = node
         
         return WorkflowNodesResponse(nodes=nodes)
     except WorkflowNotFoundError as e:
