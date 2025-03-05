@@ -36,11 +36,12 @@ async def get_workflow_nodes(
     name: str = Path(..., description="Name of the workflow to get information about")
 ):
     """
-    Get information about nodes in a specified workflow in normalized format.
+    Refresh workflows and get information about nodes in a specified workflow in normalized format.
     
     - **name**: Name of the workflow to get information about
     """
     try:
+        workflow_registry.load_workflows()
         workflow = workflow_registry.get_workflow(name)
         return WorkflowNodesResponse(
             nodes={
@@ -64,7 +65,8 @@ async def get_workflow_nodes(
 )
 async def list_workflows():
     """
-    Get a list of all available workflows.
+    Refresh and get a list of all available workflows.
     """
+    workflow_registry.load_workflows()
     workflows = workflow_registry.get_workflow_names()
     return WorkflowsListResponse(workflows=workflows)
