@@ -37,7 +37,9 @@ class Settings(BaseSettings):
         """
         This automatically loads .env file and registers environment variables with pydantic.
         """
-        env_file = ".env"
+        backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        
+        env_file = os.path.join(backend_root, ".env")
         env_file_encoding = "utf-8"
 
 settings = Settings() 
