@@ -21,6 +21,11 @@ class ComfyUIClient:
         self.server_address = f"{settings.COMFY_API_HOST}:{settings.COMFY_API_PORT}"
         self.client_id = settings.COMFY_CLIENT_ID or str(uuid.uuid4())
         self.task_manager = get_task_manager()
+        self.ws = None
+        self.is_connected = False
+        self.reconnect_needed = True
+        self.reconnect_delay = 5 
+        self.max_reconnect_delay = 60  
         
         # Start WebSocket connection in a background thread
         self._start_websocket()
@@ -30,29 +35,44 @@ class ComfyUIClient:
         """Start a WebSocket connection in a background thread."""
         def websocket_thread():
             while True:
+                if not self.reconnect_needed:
+                    time.sleep(1)
+                    continue
+                    
                 try:
                     ws_url = f"ws://{self.server_address}/ws?clientId={self.client_id}"
                     logger.info(f"Connecting to ComfyUI WebSocket at {ws_url}")
                     
-                    # Create WebSocket connection
+                    # Create WebSocket connection with ping/pong for keepalive
                     self.ws = websocket.WebSocketApp(
                         ws_url,
                         on_open=self._on_ws_open,
                         on_message=self._on_ws_message,
                         on_error=self._on_ws_error,
-                        on_close=self._on_ws_close
+                        on_close=self._on_ws_close,
+                        on_ping=self._on_ws_ping,
+                        on_pong=self._on_ws_pong
                     )
                     
-                    self.ws.run_forever()
-
-                    # Fallback to reconnect
-                    logger.warning("WebSocket connection closed, reconnecting in 5 seconds...")
-                    import time
-                    time.sleep(5)
+                    # Reset reconnect delay on successful connection
+                    self.reconnect_needed = False
+                    
+                    # Enable ping/pong to keep the connection alive
+                    self.ws.run_forever(ping_interval=30, ping_timeout=10)
+                    
+                    if self.reconnect_needed:
+                        delay = min(self.reconnect_delay, self.max_reconnect_delay)
+                        logger.warning(f"WebSocket connection closed, reconnecting in {delay} seconds...")
+                        time.sleep(delay)
+                        # Increase delay for next attempt with exponential backoff
+                        self.reconnect_delay = min(self.reconnect_delay * 1.5, self.max_reconnect_delay)
                 except Exception as e:
                     logger.error(f"Error in WebSocket thread: {e}")
-                    import time
-                    time.sleep(5)
+                    delay = min(self.reconnect_delay, self.max_reconnect_delay)
+                    time.sleep(delay)
+                    # Increase delay for next attempt with exponential backoff
+                    self.reconnect_delay = min(self.reconnect_delay * 1.5, self.max_reconnect_delay)
+                    self.reconnect_needed = True
         
         # Start the thread
         thread = threading.Thread(target=websocket_thread, daemon=True)
@@ -61,12 +81,22 @@ class ComfyUIClient:
     def _on_ws_open(self, ws):
         """Called when WebSocket connection is established."""
         logger.info("WebSocket connection established with ComfyUI")
+        self.is_connected = True
+        self.reconnect_delay = 5  
         
         # Subscribe to events
         ws.send(json.dumps({
             "type": "subscribe",
             "data": {"events": ["progress", "executing", "execution_cached"]}
         }))
+    
+    def _on_ws_ping(self, ws, message):
+        """Handle ping from server."""
+        logger.debug("Received ping from server")
+    
+    def _on_ws_pong(self, ws, message):
+        """Handle pong from server."""
+        logger.debug("Received pong from server")
     
     def _on_ws_message(self, ws, message):
         """
@@ -111,10 +141,17 @@ class ComfyUIClient:
     def _on_ws_error(self, ws, error):
         """Handle WebSocket errors."""
         logger.error(f"WebSocket error: {error}")
+        self.is_connected = False
     
     def _on_ws_close(self, ws, close_status_code, close_msg):
         """Handle WebSocket connection closure."""
         logger.warning(f"WebSocket connection closed: {close_msg} (code: {close_status_code})")
+        self.is_connected = False
+        self.reconnect_needed = True
+        
+        # Schedule an immediate reconnection, don't wait for the reconnect loop
+        if self.ws:
+            self.ws.close()
     
     def queue_prompt(self, prompt, task_id=None):
         """
@@ -127,6 +164,11 @@ class ComfyUIClient:
         Returns:
             str: Prompt ID from ComfyUI
         """
+        # Ensure we have a WebSocket connection
+        if not self.is_connected:
+            logger.warning("WebSocket not connected, trying to reconnect")
+            self.reconnect_needed = True
+        
         payload = {
             "prompt": prompt,
             "client_id": self.client_id
