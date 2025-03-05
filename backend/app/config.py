@@ -1,5 +1,7 @@
 from pydantic_settings import BaseSettings
 import uuid
+import os
+from typing import Optional
 
 class Settings(BaseSettings):
     """
@@ -15,6 +17,14 @@ class Settings(BaseSettings):
     REDIS_DB: int = 0
     TASK_TTL_SECONDS: int = 60*60*24*7  # 7 days
     
+    # AWS S3 Configuration
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
+    AWS_REGION: str = "us-east-1"
+    S3_BUCKET_NAME: Optional[str] = None
+    S3_PREFIX: str = "images/"
+    S3_STORAGE_ENABLED: bool = False
+    
     @property
     def COMFY_API_URL(self) -> str:
         return f"http://{self.COMFY_API_HOST}:{self.COMFY_API_PORT}"
@@ -22,5 +32,12 @@ class Settings(BaseSettings):
     @property
     def REDIS_URL(self) -> str:
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
+    class Config:
+        """
+        This automatically loads .env file and registers environment variables with pydantic.
+        """
+        env_file = ".env"
+        env_file_encoding = "utf-8"
 
 settings = Settings() 
