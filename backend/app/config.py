@@ -2,6 +2,10 @@ from pydantic_settings import BaseSettings
 import uuid
 
 class Settings(BaseSettings):
+    """
+    Settings for the backend application.
+    If you deployed with docker-compose, make sure to use the correct port for the ComfyUI server.
+    """
     COMFY_API_HOST: str = "127.0.0.1"
     COMFY_API_PORT: int = 8188
     COMFY_CLIENT_ID: str = str(uuid.uuid4())  
