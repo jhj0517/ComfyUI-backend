@@ -12,6 +12,7 @@ from typing import Dict, List, Optional, Any
 from ..config import settings
 from ..logging import get_logger
 from ..services.task_manager import get_task_manager, TaskStatus
+from ..services.s3_service import get_s3_service
 
 logger = get_logger()
 
@@ -23,6 +24,7 @@ class ComfyUIClient:
         self.server_address = f"{settings.COMFY_API_HOST}:{settings.COMFY_API_PORT}"
         self.client_id = settings.COMFY_CLIENT_ID or str(uuid.uuid4())
         self.task_manager = get_task_manager()
+        self.s3_service = get_s3_service()
         self.ws = None
         self.is_connected = False
         self.reconnect_needed = True
@@ -155,8 +157,12 @@ class ComfyUIClient:
                         output_images = self.get_images(prompt_id)
                         
                         if output_images:
-                            self.task_manager.update_task_result(task.id, output_images)
-                            logger.info(f"Added {sum(len(images) for images in output_images.values())} result images to task {task.id}")
+                            # Get S3 service and process images (if enabled)
+                            processed_images = self.s3_service.process_comfyui_images(prompt_id, output_images, cleanup=False)
+                            
+                            # Store the image URLs as the task result
+                            self.task_manager.update_task_result(task.id, processed_images)
+                            logger.info(f"Added {sum(len(images) for images in processed_images.values())} result images to task {task.id}")
                         
                         self.task_manager.update_task_status(task.id, TaskStatus.COMPLETED.value)
                         logger.info(f"Task {task.id} marked as completed")
