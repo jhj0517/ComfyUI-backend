@@ -64,24 +64,16 @@ class S3Service:
                 self.bucket_name, 
                 s3_key,
                 ExtraArgs={
-                    'ContentType': content_type,
-                    'ACL': 'public-read' 
+                    'ContentType': content_type
                 }
             )
             
             s3_url = f"https://{self.bucket_name}.s3.amazonaws.com/{s3_key}"
-            
-            if self.cloudfront_enabled and self.cloudfront_domain:
-                cloudfront_url = f"https://{self.cloudfront_domain}/{s3_key}"
-                url = cloudfront_url
-            else:
-                url = s3_url
                 
             logger.info(f"Successfully uploaded {filename} to S3: {s3_url}")
             
             return {
                 "filename": filename,
-                "url": url,
                 "s3_url": s3_url,
                 "s3_key": s3_key
             }
