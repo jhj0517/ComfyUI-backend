@@ -127,7 +127,6 @@ class ComfyUIClient:
         Returns:
             str: Prompt ID from ComfyUI
         """
-        # Format the request payload
         payload = {
             "prompt": prompt,
             "client_id": self.client_id
@@ -137,7 +136,6 @@ class ComfyUIClient:
         data = json.dumps(payload).encode('utf-8')
         
         try:
-            # Send the request
             req = urllib.request.Request(
                 f"http://{self.server_address}/prompt",
                 data=data,
@@ -177,7 +175,7 @@ def get_comfy_client() -> ComfyUIClient:
         ComfyUIClient: The singleton instance
     """
     #  Wait for ComfyUI to start
-    time.sleep(10)
+    time.sleep(5)
     return ComfyUIClient()
 
 get_comfy_client()
