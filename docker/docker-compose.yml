@@ -5,6 +5,7 @@ services:
     build:
       context: ..
       dockerfile: docker/backend.Dockerfile
+    image: comfyui-backend:latest
     ports:
       - "8000:8000"
     environment:
@@ -22,12 +23,14 @@ services:
     build: 
       context: ..
       dockerfile: docker/comfyui.Dockerfile
+    image: comfyui:latest
     ports:
       - "8188:8188"
     volumes:
-      - ../ComfyUI/models:/app/models
+      - C:\ComfyUI_windows_portable\ComfyUI\models:/app/models
       - ../ComfyUI/input:/app/input
       - ../ComfyUI/output:/app/output
+      - ../ComfyUI/custom_nodes:/app/custom_nodes
     deploy:
       resources:
         reservations:
