@@ -25,7 +25,7 @@ class WorkflowsListResponse(BaseModel):
 
 @router.get(
     "/{name}/nodes", 
-    summary="Get workflow nodes",
+    summary="Get workflow nodes in normalized format",
     response_model=WorkflowNodesResponse,
     responses={
         200: {"description": "Successful response with workflow nodes"},
@@ -36,21 +36,21 @@ async def get_workflow_nodes(
     name: str = Path(..., description="Name of the workflow to get information about")
 ):
     """
-    Get information about nodes in a specified workflow.
+    Get information about nodes in a specified workflow in normalized format.
     
     - **name**: Name of the workflow to get information about
     """
     try:
         workflow = workflow_registry.get_workflow(name)
-        return {
-            "nodes": {
-                node_id: {
-                    "class_type": node["class_type"],
-                    "inputs": node.get("inputs", {})
-                }
+        return WorkflowNodesResponse(
+            nodes={
+                node_id: WorkflowNode(
+                    class_type=node["class_type"] if "class_type" in node else "",
+                    inputs=node.get("inputs", {})
+                )
                 for node_id, node in workflow.workflow.items()
             }
-        }
+        )
     except WorkflowNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -67,4 +67,4 @@ async def list_workflows():
     Get a list of all available workflows.
     """
     workflows = workflow_registry.get_workflow_names()
-    return {"workflows": workflows} 
+    return WorkflowsListResponse(workflows=workflows)
