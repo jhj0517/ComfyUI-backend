@@ -8,3 +8,7 @@
 **/.manifest
 **/.DS_Store
 **/.vscode
+*.json
+*.rdb
+*.aof
+*.manifest
