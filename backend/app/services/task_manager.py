@@ -182,6 +182,38 @@ class TaskManager:
         except Exception as e:
             logger.error(f"Redis error updating task status: {e}")
             return False
+    
+    def update_task_result(self, task_id: str, result: Dict[str, Any]) -> bool:
+        """
+        Update only the result of a task without changing its status.
+        
+        Args:
+            task_id: Task ID
+            result: Result data (typically image URLs)
+            
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            task_key = f"task:{task_id}"
+            task_data = self.redis.hgetall(task_key)
+            
+            if not task_data:
+                logger.warning(f"Task {task_id} not found for result update")
+                return False
+            
+            # Update only the result and updated_at timestamp
+            task_data["result"] = json.dumps(result)
+            task_data["updated_at"] = datetime.now().isoformat()
+            
+            self.redis.hset(task_key, mapping=task_data)
+            self.redis.expire(task_key, self.ttl)
+            
+            logger.debug(f"Updated task {task_id} result with {len(result)} output nodes")
+            return True
+        except Exception as e:
+            logger.error(f"Redis error updating task result: {e}")
+            return False
             
     def get_task(self, task_id: str) -> Optional[Task]:
         """Get task data by ID
