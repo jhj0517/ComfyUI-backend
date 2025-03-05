@@ -262,18 +262,11 @@ class ComfyUIClient:
             }
             url = f"http://{self.server_address}/view?{urllib.parse.urlencode(params)}"
             
-            direct_url = f"http://{self.server_address}/view?{urllib.parse.urlencode(params)}"
-            
-            download_params = params.copy()
-            download_params["download"] = "true"
-            download_url = f"http://{self.server_address}/view?{urllib.parse.urlencode(download_params)}"
-            
             return {
                 "filename": filename,
                 "subfolder": subfolder,
                 "type": filetype,
-                "url": direct_url,
-                "download_url": download_url
+                "url": url,
             }
         except Exception as e:
             logger.error(f"Error getting image URL: {e}")
