@@ -34,7 +34,7 @@ def create_test_image():
 
 def test_s3_upload():
     """Test uploading to S3"""
-    load_dotenv(dotenv_path)
+    load_dotenv(dotenv_path, override=True)
     
     # Check if S3 is configured
     s3_enabled = os.getenv('S3_STORAGE_ENABLED', 'false').lower() == 'true'
