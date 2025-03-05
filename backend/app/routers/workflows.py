@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Path
 from pydantic import BaseModel, Field
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from ..workflows.workflow_registry import workflow_registry
 from ..exceptions import WorkflowNotFoundError
 
@@ -10,14 +10,19 @@ router = APIRouter(
     responses={404: {"description": "Workflow not found"}},
 )
 
-class WorkflowNode(BaseModel):
-    """Represents a node in a workflow."""
-    class_type: str = Field(..., description="The type of node")
-    inputs: Dict[str, Any] = Field(default={}, description="Input parameters for the node")
+class ComfyUIWorkflowNode(BaseModel):
+    """Represents a node in a ComfyUI workflow."""
+    id: int = Field(..., description="Node ID")
+    type: str = Field(..., description="Node type")
+    inputs: List[Dict[str, Any]] = Field(default=[], description="Node inputs")
+    outputs: List[Dict[str, Any]] = Field(default=[], description="Node outputs")
+    widgets_values: Optional[List[Any]] = Field(None, description="Widget values if any")
 
 class WorkflowNodesResponse(BaseModel):
     """Response model for workflow nodes."""
-    nodes: Dict[str, WorkflowNode] = Field(..., description="Dictionary of nodes in the workflow")
+    nodes: Dict[str, ComfyUIWorkflowNode] = Field(
+        ..., description="Dictionary of nodes in the workflow"
+    )
 
 class WorkflowsListResponse(BaseModel):
     """Response model for listing workflows."""
@@ -42,15 +47,12 @@ async def get_workflow_nodes(
     """
     try:
         workflow = workflow_registry.get_workflow(name)
-        return {
-            "nodes": {
-                node_id: {
-                    "class_type": node["class_type"],
-                    "inputs": node.get("inputs", {})
-                }
-                for node_id, node in workflow.workflow.items()
-            }
-        }
+        
+        nodes = {}
+        for node in workflow.workflow["nodes"]:
+            nodes[str(node["id"])] = node
+        
+        return WorkflowNodesResponse(nodes=nodes)
     except WorkflowNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -67,4 +69,4 @@ async def list_workflows():
     Get a list of all available workflows.
     """
     workflows = workflow_registry.get_workflow_names()
-    return {"workflows": workflows} 
+    return WorkflowsListResponse(workflows=workflows)
