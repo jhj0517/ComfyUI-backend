@@ -1,11 +1,13 @@
 import json
 import urllib.request
+import urllib.parse
 import uuid
 import websocket
 import threading
 import logging
 import functools
 import time
+from typing import Dict, List, Optional, Any
 
 from ..config import settings
 from ..logging import get_logger
@@ -131,9 +133,7 @@ class ComfyUIClient:
                 self.task_manager.update_task_progress(task.id, progress)
                 logger.debug(f"Updated progress for task {task.id}: {progress}%")
                 
-                if msg_data['value'] == msg_data['max'] and msg_data['max'] > 1:
-                    logger.info(f"Progress complete for prompt {prompt_id}, task {task.id}")
-            
+            # Handle execution completed
             elif message_type == 'executing':
                 msg_data = data['data']
                 prompt_id = msg_data.get('prompt_id')
@@ -152,11 +152,17 @@ class ComfyUIClient:
                     
                     history = self.get_history(prompt_id)
                     if history and prompt_id in history:
+                        output_images = self.get_images(prompt_id)
+                        
+                        if output_images:
+                            self.task_manager.update_task_result(task.id, output_images)
+                            logger.info(f"Added {sum(len(images) for images in output_images.values())} result images to task {task.id}")
+                        
                         self.task_manager.update_task_status(task.id, TaskStatus.COMPLETED.value)
-                        logger.info(f"Results processed for task {task.id}")
+                        logger.info(f"Task {task.id} marked as completed")
             
             elif message_type == 'status':
-                logger.debug(f"Received status update: {data['data']}")
+                logger.debug(f"Received status update: {data.get('data', {})}")
                 
         except Exception as e:
             logger.error(f"Error processing WebSocket message: {e}")
@@ -229,6 +235,86 @@ class ComfyUIClient:
         except Exception as e:
             logger.error(f"Error getting history: {e}")
             return None
+            
+    def _get_image(self, filename: str, subfolder: str, filetype: str) -> Dict[str, str]:
+        """
+        Get image URL from ComfyUI server.
+        
+        Args:
+            filename: Image filename
+            subfolder: Subfolder where the image is stored
+            filetype: Type of the file
+            
+        Returns:
+            Dict with image information including URL
+        """
+        try:
+            params = {
+                "filename": filename,
+                "subfolder": subfolder,
+                "type": filetype
+            }
+            url = f"http://{self.server_address}/view?{urllib.parse.urlencode(params)}"
+            
+            direct_url = f"http://{self.server_address}/view?{urllib.parse.urlencode(params)}"
+            
+            download_params = params.copy()
+            download_params["download"] = "true"
+            download_url = f"http://{self.server_address}/view?{urllib.parse.urlencode(download_params)}"
+            
+            return {
+                "filename": filename,
+                "subfolder": subfolder,
+                "type": filetype,
+                "url": direct_url,
+                "download_url": download_url
+            }
+        except Exception as e:
+            logger.error(f"Error getting image URL: {e}")
+            return {"error": str(e)}
+    
+    def get_images(self, prompt_id: str) -> Dict[str, List[Dict[str, str]]]:
+        """
+        Get all output images for a completed prompt.
+        
+        Args:
+            prompt_id: The prompt ID to get images for
+            
+        Returns:
+            Dictionary mapping node IDs to lists of image data
+        """
+        try:
+            # Get the images from the execution history
+            history_data = self.get_history(prompt_id)
+            if not history_data or prompt_id not in history_data:
+                logger.error(f"No history found for prompt {prompt_id}")
+                return {}
+            
+            history = history_data[prompt_id]
+            output_images = {}
+            
+            for node_id in history.get('outputs', {}):
+                node_output = history['outputs'][node_id]
+                images_output = []
+                
+                if 'images' in node_output:
+                    for image in node_output['images']:
+                        image_data = self._get_image(
+                            image['filename'], 
+                            image['subfolder'], 
+                            image['type']
+                        )
+                        images_output.append(image_data)
+                
+                if images_output:
+                    output_images[node_id] = images_output
+            
+            logger.info(f"Retrieved {sum(len(images) for images in output_images.values())} images for prompt {prompt_id}")
+            return output_images
+        except Exception as e:
+            logger.error(f"Error getting images for prompt {prompt_id}: {e}")
+            logger.exception("Detailed error")
+            return {}
 
 @functools.lru_cache(maxsize=1)
 def get_comfy_client() -> ComfyUIClient:
