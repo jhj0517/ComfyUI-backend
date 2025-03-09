@@ -12,3 +12,5 @@
 *.rdb
 *.aof
 *.manifest
+*.pem
+*.log
