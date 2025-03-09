@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # AWS S3 Configuration
     AWS_ACCESS_KEY_ID: Optional[str] = None
     AWS_SECRET_ACCESS_KEY: Optional[str] = None
-    AWS_REGION: str = "us-east-1"
+    AWS_REGION: str =  os.getenv("AWS_REGION", "us-east-1")
     S3_BUCKET_NAME: Optional[str] = None
     S3_PREFIX: str = "images/"
     S3_STORAGE_ENABLED: bool = False
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     def REDIS_URL(self) -> str:
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
 
-    # Dotenv file manages S3 configuration
+    # Dotenv file manages S3 configuration. The AWS configs will be overridden by the dotenv file.
     model_config = SettingsConfigDict(
         env_file=DOTENV,
         env_file_encoding="utf-8"
