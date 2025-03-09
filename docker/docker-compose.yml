@@ -1,6 +1,19 @@
-version: '3.8'
-
 services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/https.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ../logs/nginx:/var/log/nginx
+    networks:
+      - comfy_network
+    depends_on:
+      - backend
+      - comfyui
+
   backend:
     build:
       context: ..
@@ -11,10 +24,8 @@ services:
     env_file:
       - ../backend/.env
     environment:
-      # ComfyUI Server Configuration
       - COMFY_API_HOST=comfyui
       - COMFY_API_PORT=8188
-      # Redis Server Configuration
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     volumes:
@@ -22,6 +33,8 @@ services:
     depends_on:
       - comfyui
       - redis
+    networks:
+      - comfy_network
 
   comfyui:
     build: 
@@ -42,6 +55,8 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+    networks:
+      - comfy_network
 
   redis:
     image: redis:alpine
@@ -50,3 +65,9 @@ services:
     volumes:
       - ../redis-data:/data
     command: redis-server --appendonly yes
+    networks:
+      - comfy_network
+
+networks:
+  comfy_network:
+    driver: bridge
