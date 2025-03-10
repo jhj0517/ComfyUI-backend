@@ -10,6 +10,9 @@ boto3>=1.28.0
 python-dotenv>=1.0.0
 Pillow>=10.0.0
 
+# For CloudFront signed URLs
+cryptography>=36.0.0
+
 ### Testing ###
 pytest>=7.0.0
 pytest-asyncio>=0.21.0
