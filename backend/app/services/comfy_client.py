@@ -17,7 +17,10 @@ from ..services.s3_service import get_s3_service
 logger = get_logger()
 
 class ComfyUIClient:
-    """Client for interacting with ComfyUI server via WebSocket."""
+    """
+    Client for interacting with ComfyUI server via WebSocket.
+    To track the progress of the workflow, we need to subscribe to the events with the Websocket.
+    """
     
     def __init__(self):
         """Initialize the ComfyUI client with a WebSocket connection to track progress."""
