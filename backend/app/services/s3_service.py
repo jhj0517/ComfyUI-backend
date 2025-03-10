@@ -113,14 +113,13 @@ class S3Service:
                 "error": error_message
             }
     
-    def process_comfyui_images(self, prompt_id: str, image_data: Dict[str, List[Dict[str, str]]], cleanup: bool = False) -> Dict[str, List[Dict[str, str]]]:
+    def process_comfyui_images(self, prompt_id: str, image_data: Dict[str, List[Dict[str, str]]], cleanup: Optional[bool] = None) -> Dict[str, List[Dict[str, str]]]:
         """
         Process ComfyUI image data, upload images to S3, and update URLs.
         
         Args:
             prompt_id: The ComfyUI prompt ID
             image_data: Dictionary of image data from ComfyUI
-            cleanup: Whether to cleanup the local file after upload
             
         Returns:
             Modified image data with S3 URLs
@@ -128,6 +127,9 @@ class S3Service:
         if not self.enabled:
             logger.info("S3 storage disabled, skipping image upload")
             return image_data
+        
+        if cleanup is None:
+            cleanup = settings.LOCAL_IMAGE_CLEANUP_AFTER_UPLOAD
         
         try:
             result = {}

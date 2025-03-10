@@ -161,9 +161,8 @@ class ComfyUIClient:
                         
                         if output_images:
                             # Get S3 service and process images (if enabled)
-                            processed_images = self.s3_service.process_comfyui_images(prompt_id, output_images, cleanup=False)
+                            processed_images = self.s3_service.process_comfyui_images(prompt_id, output_images)
                             
-                            # Store the image URLs as the task result
                             self.task_manager.update_task_result(task.id, processed_images)
                             logger.info(f"Added {sum(len(images) for images in processed_images.values())} result images to task {task.id}")
                         
