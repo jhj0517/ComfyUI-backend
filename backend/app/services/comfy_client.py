@@ -12,17 +12,22 @@ from typing import Dict, List, Optional, Any
 from ..config import settings
 from ..logging import get_logger
 from ..services.task_manager import get_task_manager, TaskStatus
+from ..services.s3_service import get_s3_service
 
 logger = get_logger()
 
 class ComfyUIClient:
-    """Client for interacting with ComfyUI server via WebSocket."""
+    """
+    Client for interacting with ComfyUI server via WebSocket.
+    To track the progress of the workflow, we need to subscribe to the events with the Websocket.
+    """
     
     def __init__(self):
         """Initialize the ComfyUI client with a WebSocket connection to track progress."""
         self.server_address = f"{settings.COMFY_API_HOST}:{settings.COMFY_API_PORT}"
         self.client_id = settings.COMFY_CLIENT_ID or str(uuid.uuid4())
         self.task_manager = get_task_manager()
+        self.s3_service = get_s3_service()
         self.ws = None
         self.is_connected = False
         self.reconnect_needed = True
@@ -155,8 +160,12 @@ class ComfyUIClient:
                         output_images = self.get_images(prompt_id)
                         
                         if output_images:
-                            self.task_manager.update_task_result(task.id, output_images)
-                            logger.info(f"Added {sum(len(images) for images in output_images.values())} result images to task {task.id}")
+                            # Get S3 service and process images (if enabled)
+                            processed_images = self.s3_service.process_comfyui_images(prompt_id, output_images, cleanup=False)
+                            
+                            # Store the image URLs as the task result
+                            self.task_manager.update_task_result(task.id, processed_images)
+                            logger.info(f"Added {sum(len(images) for images in processed_images.values())} result images to task {task.id}")
                         
                         self.task_manager.update_task_status(task.id, TaskStatus.COMPLETED.value)
                         logger.info(f"Task {task.id} marked as completed")
@@ -256,18 +265,11 @@ class ComfyUIClient:
             }
             url = f"http://{self.server_address}/view?{urllib.parse.urlencode(params)}"
             
-            direct_url = f"http://{self.server_address}/view?{urllib.parse.urlencode(params)}"
-            
-            download_params = params.copy()
-            download_params["download"] = "true"
-            download_url = f"http://{self.server_address}/view?{urllib.parse.urlencode(download_params)}"
-            
             return {
                 "filename": filename,
                 "subfolder": subfolder,
                 "type": filetype,
-                "url": direct_url,
-                "download_url": download_url
+                "url": url,
             }
         except Exception as e:
             logger.error(f"Error getting image URL: {e}")
