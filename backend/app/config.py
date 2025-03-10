@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     S3_BUCKET_NAME: Optional[str] = None
     S3_PREFIX: str = "images/"
     S3_STORAGE_ENABLED: bool = False
+    LOCAL_IMAGE_CLEANUP_AFTER_UPLOAD: bool = False  # Whether to delete local temporary files after upload
     
     @property
     def COMFY_API_URL(self) -> str:
