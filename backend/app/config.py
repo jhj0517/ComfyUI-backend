@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     """
     Settings for the backend application.
     If you deployed with docker-compose, make sure to use the correct port for the ComfyUI server.
+    Some settings (e.g. AWS S3) are overridden by the dotenv file.
     """
     # ComfyUI Configuration
     COMFY_API_HOST: str = "127.0.0.1"
@@ -31,6 +32,14 @@ class Settings(BaseSettings):
     S3_PREFIX: str = "images/"
     S3_STORAGE_ENABLED: bool = False
     LOCAL_IMAGE_CLEANUP_AFTER_UPLOAD: bool = False  # Whether to delete local temporary files after upload
+    
+    # CloudFront Configuration
+    CLOUDFRONT_ENABLED: bool = False
+    CLOUDFRONT_DOMAIN: Optional[str] = None  # e.g., "d1234abcdef.cloudfront.net" or "assets.yourdomain.com"
+    CLOUDFRONT_KEY_PAIR_ID: Optional[str] = None  # For signed URL
+    CLOUDFRONT_PRIVATE_KEY_PATH: Optional[str] = None  # For signed URL
+    CLOUDFRONT_SIGNED_URLS_ENABLED: bool = False  # Whether to use signed URL
+    CLOUDFRONT_URL_EXPIRATION: int = 604800  # Signed URL expiration date, 7 days by default
     
     @property
     def COMFY_API_URL(self) -> str:
