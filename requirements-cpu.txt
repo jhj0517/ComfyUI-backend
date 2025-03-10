@@ -1,4 +1,4 @@
-# This file is for local testing and is not used in the deployment.
+# This file is for locally running integration tests and is not used in the docker deployment.
 ### ComfyUI ###
 torch
 torchsde
