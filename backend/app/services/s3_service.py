@@ -1,7 +1,5 @@
 import os
 import logging
-import boto3
-from botocore.exceptions import ClientError
 from typing import Dict, Optional, List, Any, Tuple
 import mimetypes
 import uuid
@@ -10,6 +8,16 @@ import functools
 import json
 import tempfile
 import traceback
+import datetime
+# AWS S3
+import boto3
+from botocore.exceptions import ClientError
+# AWS CloudFront signed URLs
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from botocore.signers import CloudFrontSigner
 
 from ..config import settings
 from ..logging import get_logger
@@ -22,6 +30,7 @@ class S3Service:
     def __init__(self):
         """Initialize the S3 service with AWS credentials from environment variables"""
         self.enabled = settings.S3_STORAGE_ENABLED
+        self.cloudfront_enabled = settings.CLOUDFRONT_ENABLED and settings.CLOUDFRONT_DOMAIN
         
         if not self.enabled:
             logger.warning("S3 storage is disabled, using local URLs")
@@ -37,9 +46,19 @@ class S3Service:
             self.bucket_name = settings.S3_BUCKET_NAME
             self.s3_prefix = settings.S3_PREFIX
             logger.info(f"S3 service initialized with bucket: {self.bucket_name}")
+            
+            # Check CloudFront configuration
+            if self.cloudfront_enabled:
+                logger.info(f"CloudFront enabled with domain: {settings.CLOUDFRONT_DOMAIN}")
+                if settings.CLOUDFRONT_SIGNED_URLS_ENABLED:
+                    if not settings.CLOUDFRONT_KEY_PAIR_ID or not settings.CLOUDFRONT_PRIVATE_KEY_PATH:
+                        logger.warning("CloudFront signed URLs enabled but missing key configuration")
+                    else:
+                        logger.info("CloudFront signed URLs enabled")
         except Exception as e:
             logger.error(f"Error connecting to S3, disabling S3 storage: {str(e)}")
             self.enabled = False
+            self.cloudfront_enabled = False
     
     def upload_image(self, image_path: str, subfolder: str = None) -> Dict[str, str]:
         """
@@ -83,15 +102,34 @@ class S3Service:
                 }
             )
             
+            # Generate S3 URL
             s3_url = f"https://{self.bucket_name}.s3.amazonaws.com/{s3_key}"
-            logger.info(f"Successfully uploaded {filename} to S3: {s3_url}")
             
-            result = {
-                "filename": filename,
-                "url": s3_url,
-                "s3_url": s3_url,
-                "s3_key": s3_key
-            }
+            # Generate CloudFront URL if enabled
+            if self.cloudfront_enabled:
+                if settings.CLOUDFRONT_SIGNED_URLS_ENABLED:
+                    cloudfront_url = self._generate_cloudfront_signed_url(s3_key)
+                else:
+                    cloudfront_url = f"https://{settings.CLOUDFRONT_DOMAIN}/{s3_key}"
+                
+                logger.info(f"Generated CloudFront URL for {filename}: {cloudfront_url}")
+                
+                result = {
+                    "filename": filename,
+                    "url": cloudfront_url, 
+                    "s3_url": s3_url,       
+                    "cloudfront_url": cloudfront_url,
+                    "s3_key": s3_key
+                }
+            else:
+                logger.info(f"Successfully uploaded {filename} to S3: {s3_url}")
+                result = {
+                    "filename": filename,
+                    "url": s3_url,
+                    "s3_url": s3_url,
+                    "s3_key": s3_key
+                }
+                
             return result
             
         except ClientError as e:
@@ -112,6 +150,42 @@ class S3Service:
                 "url": image_path,
                 "error": error_message
             }
+    
+    def _generate_cloudfront_signed_url(self, s3_key: str) -> str:
+        """Generate a signed CloudFront URL for the given S3 key"""
+        if not settings.CLOUDFRONT_KEY_PAIR_ID or not settings.CLOUDFRONT_PRIVATE_KEY_PATH:
+            logger.warning("CloudFront signed URLs enabled but missing key configuration")
+            return f"https://{settings.CLOUDFRONT_DOMAIN}/{s3_key}"
+            
+        try:            
+            def rsa_signer(message):
+                with open(settings.CLOUDFRONT_PRIVATE_KEY_PATH, 'rb') as key_file:
+                    private_key = load_pem_private_key(
+                        key_file.read(),
+                        password=None,
+                        backend=default_backend()
+                    )
+                return private_key.sign(message, padding.PKCS1v15(), hashes.SHA1())
+                
+            key_id = settings.CLOUDFRONT_KEY_PAIR_ID
+            cf_signer = CloudFrontSigner(key_id, rsa_signer)
+            
+            # Set expiration time
+            expire_date = datetime.datetime.now() + datetime.timedelta(seconds=settings.CLOUDFRONT_URL_EXPIRATION)
+            
+            # Generate the URL
+            url = f"https://{settings.CLOUDFRONT_DOMAIN}/{s3_key}"
+            signed_url = cf_signer.generate_presigned_url(
+                url,
+                date_less_than=expire_date
+            )
+            
+            return signed_url
+            
+        except Exception as e:
+            logger.error(f"Error generating CloudFront signed URL: {e}")
+            logger.exception("Detailed error:")
+            return f"https://{settings.CLOUDFRONT_DOMAIN}/{s3_key}"
     
     def process_comfyui_images(self, prompt_id: str, image_data: Dict[str, List[Dict[str, str]]], cleanup: Optional[bool] = None) -> Dict[str, List[Dict[str, str]]]:
         """
