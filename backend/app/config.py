@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     """
     Settings for the backend application.
     If you deployed with docker-compose, make sure to use the correct port for the ComfyUI server.
+    Some settings (e.g. AWS S3) are overridden by the dotenv file.
     """
     # ComfyUI Configuration
     COMFY_API_HOST: str = "127.0.0.1"
