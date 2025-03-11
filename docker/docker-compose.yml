@@ -11,7 +11,7 @@ services:
     networks:
       - comfy_network
     depends_on:
-      - backend
+      - comfyui-fastapi
       - comfyui
 
   comfyui-fastapi:
