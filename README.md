@@ -5,7 +5,7 @@ fastapi Backend for ComfyUI with AWS S3 and CloudFront integrations. AWS stuffs 
 ![architecture-2](https://github.com/user-attachments/assets/44456c86-00c1-4e32-b8da-f0d8abb9607e)
 
 
-## 🐳 Setup with Docker
+## 🐳 Setup with Docker Compose
 
 1. **Git clone repository. Make sure you add `--recursive` at the end to clone submodule together.**
 ```
@@ -13,7 +13,7 @@ git clone https://github.com/jhj0517/ComfyUI-backend.git --recursive
 cd ComfyUI-backend
 ```
 
-2. **(Optional) Setup AWS configs with the `backend/.env`.**
+2. **(Optional) Setup AWS configs in the `backend/.env`.**
 
 https://github.com/jhj0517/ComfyUI-backend/blob/a66e7750ba9410ddaba6149100a3b8852262a69e/backend/.env.example#L1-L18
 
@@ -98,7 +98,7 @@ If not, edit [`docker/comfyui.Dockerfile`](https://github.com/jhj0517/ComfyUI-ba
 
 https://github.com/jhj0517/ComfyUI-backend/blob/a66e7750ba9410ddaba6149100a3b8852262a69e/docker/comfyui.Dockerfile#L15-L17
 
-## Misc
+## 📚 Misc
 
-Redis db is stored in [`redis-data`](https://github.com/jhj0517/ComfyUI-backend/tree/master/redis-data)<br>
-Logs for Nginx is saved in `logs/nginx`
+Redis db is stored in [`redis-data/`](https://github.com/jhj0517/ComfyUI-backend/tree/master/redis-data)<br>
+Logs for Nginx is saved in `logs/nginx/`
