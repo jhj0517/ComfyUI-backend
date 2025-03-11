@@ -91,7 +91,8 @@ requests.post(
 ```
 
 The backend assumes that you have your own proxy server for the client. <br>
-So for the sophisticated API parameterization, the proxy server is responsible for it. Or you can just add another endpoint that wraps `/generate` and use it in the fastapi. 
+This provides several advantages, including flexibility for workflows in the inference server. <br>
+So for the sophisticated API parameterization, the proxy server is responsible for it. Or you can just add another endpoint that wraps `/generation` and use it in the fastapi. 
 
 ## 🖥️ Device Matching
 The backend assumes that you're using Nvidia GPU by default.
