@@ -7,11 +7,11 @@ import sys
 import dotenv
 import pytest
 
-backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if backend_dir not in sys.path:
-    sys.path.insert(0, backend_dir)
+comfyui_fastapi_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if comfyui_fastapi_dir not in sys.path:
+    sys.path.insert(0, comfyui_fastapi_dir)
 
-env_path = os.path.join(backend_dir, '.env')
+env_path = os.path.join(comfyui_fastapi_dir, '.env')
 dotenv.load_dotenv(env_path)
 
 @pytest.fixture(scope="session", autouse=True)

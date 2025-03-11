@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY backend/requirements.txt .
+COPY ComfyUI-fastapi/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 
@@ -24,7 +24,7 @@ WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY backend/ .
+COPY ComfyUI-fastapi/ .
 
 # Set Port
 EXPOSE 8000
