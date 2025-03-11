@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     CLOUDFRONT_PRIVATE_KEY_PATH: Optional[str] = None  # For signed URL
     CLOUDFRONT_SIGNED_URLS_ENABLED: bool = False  # Whether to use signed URL
     CLOUDFRONT_URL_EXPIRATION: int = 604800  # Signed URL expiration date, 7 days by default
+
+    # Proxy Server Webhook Configuration
+    PROXY_WEBHOOK_URL: str = os.getenv("PROXY_WEBHOOK_URL", "")
+    PROXY_WEBHOOK_SECRET: str = os.getenv("PROXY_WEBHOOK_SECRET", "")
     
     @property
     def COMFY_API_URL(self) -> str:
