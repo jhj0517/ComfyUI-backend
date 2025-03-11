@@ -98,7 +98,7 @@ If not, edit [`docker/comfyui.Dockerfile`](https://github.com/jhj0517/ComfyUI-ba
 
 https://github.com/jhj0517/ComfyUI-backend/blob/a66e7750ba9410ddaba6149100a3b8852262a69e/docker/comfyui.Dockerfile#L15-L17
 
-## Misc
+## 📚 Misc
 
-Redis db is stored in [`redis-data`](https://github.com/jhj0517/ComfyUI-backend/tree/master/redis-data)<br>
-Logs for Nginx is saved in `logs/nginx`
+Redis db is stored in [`redis-data/`](https://github.com/jhj0517/ComfyUI-backend/tree/master/redis-data)<br>
+Logs for Nginx is saved in `logs/nginx/`
