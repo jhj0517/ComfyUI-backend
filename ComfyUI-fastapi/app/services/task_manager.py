@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
 from enum import Enum, auto
 import functools
+import asyncio
+import httpx
 
 from app.config import settings
 from app.logging import get_logger
@@ -165,7 +167,7 @@ class TaskManager:
             if not task_data:
                 logger.warning(f"Task {task_id} not found for status update")
                 return False
-            
+                
             status_enum = status if isinstance(status, TaskStatus) else TaskStatus(status)
             
             task_data["status"] = status_enum.value
@@ -178,6 +180,11 @@ class TaskManager:
             self.redis.expire(task_key, self.ttl)
             
             logger.debug(f"Updated task {task_id} status to {status_enum.value}")
+            
+            # Send notification for completed/failed tasks
+            if settings.PROXY_WEBHOOK_URL and (status_enum == TaskStatus.COMPLETED or status_enum == TaskStatus.FAILED):
+                asyncio.create_task(self._notify_proxy_server(task_id, status_enum.value, result))
+            
             return True
         except Exception as e:
             logger.error(f"Redis error updating task status: {e}")
@@ -345,6 +352,55 @@ class TaskManager:
         except redis.RedisError as e:
             logger.error(f"Redis error updating task parameters: {e}")
             return False
+
+    async def _notify_proxy_server(self, task_id: str, status: str, result: Optional[Dict[str, Any]] = None):
+        """
+        Send notification to proxy server about task updates.
+        Then the proxy server will permanently store the task data to its database.
+        
+        Args:
+            task_id: ID of the completed task
+            status: Status of the task (completed/failed)
+            result: Optional result data
+        """
+        if not settings.PROXY_WEBHOOK_URL:
+            return
+            
+        try:
+            task = self.get_task(task_id)
+            if not task:
+                logger.error(f"Cannot send webhook - task {task_id} not found")
+                return
+                
+            payload = {
+                "task_id": task_id,
+                "status": status,
+                "workflow_name": task.workflow_name,
+                "created_at": task.created_at.isoformat(),
+                "updated_at": task.updated_at.isoformat(),
+                "result": task.result
+            }
+            
+            # Send webhook
+            async with httpx.AsyncClient() as client:
+                logger.info(f"Sending webhook for task {task_id} to {settings.PROXY_WEBHOOK_URL}")
+                response = await client.post(
+                    settings.PROXY_WEBHOOK_URL,
+                    json=payload,
+                    headers={
+                        "Authorization": f"Bearer {settings.PROXY_WEBHOOK_SECRET}",
+                        "Content-Type": "application/json"
+                    },
+                    timeout=10.0
+                )
+                
+            if 200 <= response.status_code < 300:
+                logger.info(f"Successfully sent webhook for task {task_id}")
+            else:
+                logger.error(f"Webhook failed with status {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            logger.error(f"Error sending webhook notification: {e}")
 
 
 @functools.lru_cache(maxsize=1)
