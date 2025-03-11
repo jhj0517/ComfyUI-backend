@@ -45,7 +45,7 @@ services:
     ports:
       - "8188:8188"
     volumes:
-      - C:\ComfyUI_windows_portable\ComfyUI\models:/app/models
+      - ../ComfyUI/models:/app/models
       - ../ComfyUI/input:/app/input
       - ../ComfyUI/output:/app/output
       - ../ComfyUI/custom_nodes:/app/custom_nodes
