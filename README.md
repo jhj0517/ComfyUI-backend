@@ -59,7 +59,7 @@ SwaggerUI is enabled in `/docs` by default, so you can test endpoints there.
 The default ComfyUI workflow directory for your backend is [`ComfyUI-fastapi/workflows/`](https://github.com/jhj0517/ComfyUI-backend/tree/master/ComfyUI-fastapi/workflows). 
 <br>Place your JSON workflows in the **API compatible** format to use them with the backend.
 
-When you make requests to the `/generate` endpoint, you can modify workflow parameters like this:
+When you make requests to the `/generation` endpoint, you can modify workflow parameters like this:
 #### Example Workflow JSON
 ```json
 {
