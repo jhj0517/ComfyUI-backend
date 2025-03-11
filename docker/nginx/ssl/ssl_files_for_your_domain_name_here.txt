@@ -1,0 +1,5 @@
+Place "fullchain.pem" and "privkey.pem" here to enable https redirection for your nginx.
+If you only use http, just use http.conf instead of https.conf in docker compose.
+
+This is the guide to creating certificate files using Let's Encrypt on Windows:
+https://trueconf.com/blog/knowledge-base/how-to-create-a-lets-encrypt-certificate-on-windows
