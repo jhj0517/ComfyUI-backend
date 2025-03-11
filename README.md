@@ -13,7 +13,7 @@ git clone https://github.com/jhj0517/ComfyUI-backend.git --recursive
 cd ComfyUI-backend
 ```
 
-2. **(Optional) Setup AWS configs with the `backend/.env`.**
+2. **(Optional) Setup AWS configs in the `backend/.env`.**
 
 https://github.com/jhj0517/ComfyUI-backend/blob/a66e7750ba9410ddaba6149100a3b8852262a69e/backend/.env.example#L1-L18
 
