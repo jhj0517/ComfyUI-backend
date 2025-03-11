@@ -4,8 +4,8 @@ import os
 from typing import Optional
 
 
-backend_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-DOTENV = os.path.join(backend_root, ".env")
+comfyui_fastapi_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+DOTENV = os.path.join(comfyui_fastapi_root, ".env")
 
 class Settings(BaseSettings):
     """
