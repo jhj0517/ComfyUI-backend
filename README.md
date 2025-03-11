@@ -1,5 +1,6 @@
-# ComfyUI backend
-fastapi Backend for ComfyUI with AWS S3 and CloudFront integrations. AWS stuffs are optional and only enabled when you setup `.env` file.
+# ComfyUI Backend
+
+A fastapi backend for ComfyUI with AWS S3 and CloudFront integration. The AWS stuffs are completely optional and only activated when you setup `.env` file.
 
 ## 🛠️ Archictecture
 ![architecture-2](https://github.com/user-attachments/assets/44456c86-00c1-4e32-b8da-f0d8abb9607e)
@@ -78,7 +79,7 @@ import requests
 requests.post(
     "http://localhost:8000/generate",
     data={
-        "workflow": "workflow_name",
+        "workflow_name": "sdxl_t2i",
         "modifications": {
             "6": {
                 "text": "Picture of dog smiles"
