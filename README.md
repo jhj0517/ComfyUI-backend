@@ -15,7 +15,7 @@ cd ComfyUI-backend
 
 2. **(Optional) Setup AWS configs in the `ComfyUI-fastapi/.env`.**
 
-https://github.com/jhj0517/ComfyUI-backend/blob/e849ac382b10267923b35094eaf2d114a5782df4/ComfyUI-fastapi/.env.example#L1-L18
+https://github.com/jhj0517/ComfyUI-backend/blob/859559f3cee6202a691c6424a59eb5372a29fb10/ComfyUI-fastapi/.env.example#L1-L22
 
 3. **(Optional) Setup key files for signed URL with CloudFront.**
 
