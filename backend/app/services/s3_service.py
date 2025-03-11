@@ -282,3 +282,5 @@ def get_s3_service() -> S3Service:
         S3Service: The singleton instance
     """
     return S3Service() 
+
+get_s3_service()
