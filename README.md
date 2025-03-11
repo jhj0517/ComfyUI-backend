@@ -6,14 +6,14 @@ fastapi Backend for ComfyUI with AWS S3 and CloudFront integrations. AWS stuffs 
 
 ## Setup with Docker
 
-1. Git clone repository
+1. **Git clone repository**
 ```
 git clone https://github.com/jhj0517/ComfyUI-backend.git --recursive
 cd ComfyUI-backend
 ```
 Make sure you add `--recursive` at the end to clone the ComfyUI submodule as well.
 
-2. (Optional) Setup `.env` file in `backend/.env`.
+2. **(Optional) Setup `.env` file in `backend/.env`.**
 ```
 # AWS S3 Configuration
 S3_STORAGE_ENABLED=true
@@ -33,7 +33,7 @@ CLOUDFRONT_PRIVATE_KEY_PATH=/app/credentials/private_key.pem
 CLOUDFRONT_URL_EXPIRATION=86400
 ```
 
-3. (Optional) Setup key files for signed URL with CloudFront.
+3. **(Optional) Setup key files for signed URL with CloudFront.**
 
   Place your CloudFront key files in `backend/credentials/`:
    - `private_key.pem` 
@@ -41,7 +41,7 @@ CLOUDFRONT_URL_EXPIRATION=86400
 
 >  📝 To create these keys, see [AWS Documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html#private-content-creating-cloudfront-key-pairs)
 
-4. (Optioanl) Setup the Nginx config for your inference server's domain name. 
+4. **(Optioanl) Setup the Nginx config for your inference server's domain name.** 
     
     a. Register your domain name in `docker/nginx/https.conf`
 
@@ -50,17 +50,17 @@ CLOUDFRONT_URL_EXPIRATION=86400
 > 📝 To create certificates for your domain name in Windows, see [How to create a "Let's Encrypt" certificate on Windows](https://trueconf.com/blog/knowledge-base/how-to-create-a-lets-encrypt-certificate-on-windows)
 
 
-5. Build with the Docker Compose
+5. **Build with the Docker Compose**
 ```
 docker compose -f docker/docker-compose.yml build
 ```
 
-6. Run with Docker Compose
+6. **Run with Docker Compose**
 ```
 docker compose -f docker/docker-compose.yml up
 ```
 
-7. Access with
+7. **Access with**
 - ComfyUI: http://localhost:8188 
 - FastAPI Backend: http://localhost:8000/docs (or your domain name with nginx)
 
