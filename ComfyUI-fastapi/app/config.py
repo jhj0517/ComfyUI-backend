@@ -14,22 +14,22 @@ class Settings(BaseSettings):
     Some settings (e.g. AWS S3) are overridden by the dotenv file.
     """
     # ComfyUI Configuration
-    COMFY_API_HOST: str = "127.0.0.1"
-    COMFY_API_PORT: int = 8188
+    COMFY_API_HOST: str = os.getenv("COMFY_API_HOST", "127.0.0.1")
+    COMFY_API_PORT: int = int(os.getenv("COMFY_API_PORT", "8188"))
     COMFY_CLIENT_ID: str = str(uuid.uuid4())  
     
     # Redis Configuration
-    REDIS_HOST: str = "127.0.0.1"
-    REDIS_PORT: int = 6379
-    REDIS_DB: int = 0
-    TASK_TTL_SECONDS: int = 60*60*24*7  # 7 days
+    REDIS_HOST: str = os.getenv("REDIS_HOST", "127.0.0.1")
+    REDIS_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
+    TASK_TTL_SECONDS: int = int(os.getenv("TASK_TTL_SECONDS", str(60*60*24*7)))  # 7 days default
     
     # AWS S3 Configuration
     AWS_ACCESS_KEY_ID: Optional[str] = None
     AWS_SECRET_ACCESS_KEY: Optional[str] = None
     AWS_REGION: str =  os.getenv("AWS_REGION", "us-east-1")
     S3_BUCKET_NAME: Optional[str] = None
-    S3_PREFIX: str = "images/"
+    S3_PREFIX: str = os.getenv("S3_PREFIX", "images/")
     S3_STORAGE_ENABLED: bool = False
     LOCAL_IMAGE_CLEANUP_AFTER_UPLOAD: bool = False  # Whether to delete local temporary files after upload
     
