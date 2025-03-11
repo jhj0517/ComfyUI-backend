@@ -5,7 +5,7 @@ fastapi Backend for ComfyUI with AWS S3 and CloudFront integrations. AWS stuffs 
 ![architecture-2](https://github.com/user-attachments/assets/44456c86-00c1-4e32-b8da-f0d8abb9607e)
 
 
-## 🐳 Setup with Docker
+## 🐳 Setup with Docker Compose
 
 1. **Git clone repository. Make sure you add `--recursive` at the end to clone submodule together.**
 ```
