@@ -2,7 +2,7 @@
 A fastapi backend for ComfyUI with AWS S3 and CloudFront integration. The AWS stuffs are completely optional and only enabled when you setup `.env` file.
 
 ## 🛠️ Archictecture
-![architecture-2](https://github.com/user-attachments/assets/44456c86-00c1-4e32-b8da-f0d8abb9607e)
+![architecture-3](https://github.com/user-attachments/assets/88d916c8-84cf-4cec-abc0-aee75ef9f874)
 
 
 ## 🐳 Setup with Docker Compose
