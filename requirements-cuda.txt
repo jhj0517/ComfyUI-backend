@@ -24,4 +24,4 @@ spandrel
 soundfile
 
 ### Backend ###
-./backend/requirements.txt
+./ComfyUI-fastapi/requirements.txt
