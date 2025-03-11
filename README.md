@@ -1,6 +1,5 @@
-# ComfyUI Backend
-
-A fastapi backend for ComfyUI with AWS S3 and CloudFront integration. The AWS stuffs are completely optional and only activated when you setup `.env` file.
+# ComfyUI backend
+A fastapi backend for ComfyUI with AWS S3 and CloudFront integration. The AWS stuffs are completely optional and only enabled when you setup `.env` file.
 
 ## 🛠️ Archictecture
 ![architecture-2](https://github.com/user-attachments/assets/44456c86-00c1-4e32-b8da-f0d8abb9607e)
@@ -14,13 +13,13 @@ git clone https://github.com/jhj0517/ComfyUI-backend.git --recursive
 cd ComfyUI-backend
 ```
 
-2. **(Optional) Setup AWS configs in the `backend/.env`.**
+2. **(Optional) Setup AWS configs in the `ComfyUI-fastapi/.env`.**
 
-https://github.com/jhj0517/ComfyUI-backend/blob/a66e7750ba9410ddaba6149100a3b8852262a69e/backend/.env.example#L1-L18
+https://github.com/jhj0517/ComfyUI-backend/blob/e849ac382b10267923b35094eaf2d114a5782df4/ComfyUI-fastapi/.env.example#L1-L18
 
 3. **(Optional) Setup key files for signed URL with CloudFront.**
 
-  Place your CloudFront key files in `backend/credentials/`:
+  Place your CloudFront key files in [`ComfyUI-fastapi/credentials/`](https://github.com/jhj0517/ComfyUI-backend/tree/master/ComfyUI-fastapi/credentials):
    - `private_key.pem` 
    - `public_key.pem` 
 
@@ -55,7 +54,7 @@ SwaggerUI is enabled in `/docs` by default, so you can test endpoints there.
 
 ## 🧮 ComfyUI Workflows
 
-The default ComfyUI workflow directory for your backend is `backend/workflows/`. 
+The default ComfyUI workflow directory for your backend is [`ComfyUI-fastapi/workflows/`](https://github.com/jhj0517/ComfyUI-backend/tree/master/ComfyUI-fastapi/workflows). 
 <br>Place your JSON workflows in the **API compatible** format to use them with the backend.
 
 When you make requests to the `/generate` endpoint, you can modify workflow parameters like this:
