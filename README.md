@@ -28,9 +28,11 @@ https://github.com/jhj0517/ComfyUI-backend/blob/e849ac382b10267923b35094eaf2d114
 
 4. **(Optioanl) Setup the Nginx config for your inference server.** 
     
-    a. Register your domain name in [`docker/nginx/https.conf`](https://github.com/jhj0517/ComfyUI-backend/blob/master/docker/nginx/https.conf)
+    1. Register your domain name in [`docker/nginx/https.conf`](https://github.com/jhj0517/ComfyUI-backend/blob/master/docker/nginx/https.conf)
 
-    b. Place SSL certificates to [`docker/nginx/ssl/`](https://github.com/jhj0517/ComfyUI-backend/tree/master/docker/nginx/ssl):
+    2. Place SSL certificates to [`docker/nginx/ssl/`](https://github.com/jhj0517/ComfyUI-backend/tree/master/docker/nginx/ssl):
+       - `fullchain.pem`
+       - `privkey.pem`
 
 >[!NOTE]
 📝 To create certificates for your domain name in Windows, see [How to create a "Let's Encrypt" certificate on Windows](https://trueconf.com/blog/knowledge-base/how-to-create-a-lets-encrypt-certificate-on-windows)
