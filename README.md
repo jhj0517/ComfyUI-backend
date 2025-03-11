@@ -98,6 +98,20 @@ If not, edit [`docker/comfyui.Dockerfile`](https://github.com/jhj0517/ComfyUI-ba
 
 https://github.com/jhj0517/ComfyUI-backend/blob/a66e7750ba9410ddaba6149100a3b8852262a69e/docker/comfyui.Dockerfile#L15-L17
 
+## 📦 Installing Custom Nodes
+
+The custom nodes directory is mapped as volume to `ComfyUI/custom_nodes` in the container.
+
+To install custom nodes:
+1. Add your custom node to the `ComfyUI/custom_nodes` directory
+2. Add required dependencies for custom node to `ComfyUI/requirements.txt`
+3. Rebuild the ComfyUI container:
+```bash
+docker compose -f docker/docker-compose.yml build comfyui
+```
+
+After rebuilding, your custom nodes will be available in ComfyUI!
+
 ## 📚 Misc
 
 Redis db is stored in [`redis-data/`](https://github.com/jhj0517/ComfyUI-backend/tree/master/redis-data)<br>
