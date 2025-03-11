@@ -47,7 +47,7 @@ CLOUDFRONT_URL_EXPIRATION=86400
 
     b. Place SSL certificates to `docker/nginx/ssl/`:
 
-> 📝 To create certificates for your domain name in Windows, see [How to create a “Let’s Encrypt” certificate on Windows](https://trueconf.com/blog/knowledge-base/how-to-create-a-lets-encrypt-certificate-on-windows)
+> 📝 To create certificates for your domain name in Windows, see [How to create a "Let's Encrypt" certificate on Windows](https://trueconf.com/blog/knowledge-base/how-to-create-a-lets-encrypt-certificate-on-windows)
 
 
 5. Build with the Docker Compose
@@ -66,9 +66,55 @@ docker compose -f docker/docker-compose.yml up
 
 SwaggerUI is enabled in `/docs` by default, so you can test endpoints there.
 
-## ComfyUI Workflows
+## 🧮 ComfyUI Workflows
 
+The default ComfyUI workflow directory for your backend is `backend/workflows/`. 
+<br>Place your workflows in the **API compatible** format to use them with the backend.
 
+When you make requests to the `/generate` endpoint, you can modify workflow parameters using the format:
+```json
+"node_number": {"param1": value1, "param2": value2}
+```
 
+#### Example Workflow JSON
+```json
+{
+    "6": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+            "clip": ["4", 1],
+            "text": "masterpiece best quality"
+        }
+    }
+}
+```
 
+#### Example API Request
+```python
+import requests
 
+requests.post(
+    "http://localhost:8000/generate",
+    json={
+        "workflow": "workflow_name",
+        "modifications": {
+            "6": {
+                "text": "Picture of dog smiles"
+            }
+        }   
+    }
+)
+```
+
+The backend assumes that you have your own proxy server for the client. <br>
+So for the sophisticated API parameterization, the proxy server is responsible for it. Or you can just add another endpoint that wraps `/generate` and use it. 
+
+## 🖥️ Device Matching
+The backend assumes that you're using Nvidia GPU by default.
+
+If not, edit `docker/comfyui.Dockerfile` to match your Device.
+```
+# Update --extra-index-url to match with your Device.
+COPY ComfyUI/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cu126
+```
