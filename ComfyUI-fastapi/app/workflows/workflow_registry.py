@@ -1,12 +1,16 @@
 from pathlib import Path
 from typing import Dict, List
+import os
+
 from .base import WorkflowExecutor
 from ..exceptions import WorkflowNotFoundError
+from ..config import comfyui_fastapi_root
+
 
 class WorkflowRegistry:
     def __init__(self):
         self.workflows: Dict[str, WorkflowExecutor] = {}
-        self.workflows_dir = Path("workflows")
+        self.workflows_dir = Path(os.path.join(comfyui_fastapi_root, "workflows"))
     
     def load_workflows(self):
         """Load all workflow JSON files from the workflows directory. Reload workflows in case new ones were added"""
