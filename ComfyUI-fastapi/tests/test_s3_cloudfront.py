@@ -59,8 +59,7 @@ def test_s3_upload(s3_service, test_image):
     parsed_url = urlparse(s3_url)
     assert parsed_url.scheme == "https", "S3 URL should use HTTPS"
     assert settings.S3_BUCKET_NAME in parsed_url.netloc, "S3 URL should contain bucket name"
-    
-    return result
+
 
 @pytest.mark.skipif(not (settings.S3_STORAGE_ENABLED and settings.CLOUDFRONT_ENABLED), 
                    reason="S3 storage or CloudFront is disabled")
@@ -73,8 +72,7 @@ def test_cloudfront_url_generation(s3_service, test_image):
     parsed_url = urlparse(cloudfront_url)
     assert parsed_url.scheme == "https", "CloudFront URL should use HTTPS"
     assert parsed_url.netloc == settings.CLOUDFRONT_DOMAIN, "CloudFront URL has incorrect domain"
-    
-    return result
+
 
 @pytest.mark.skipif(not (settings.S3_STORAGE_ENABLED and 
                        settings.CLOUDFRONT_ENABLED and 
@@ -105,8 +103,6 @@ def test_cloudfront_signed_url(s3_service, test_image):
     time_diff = abs(expires_date - expected_expiry)
 
     assert time_diff <= margin, f"Expiration time differs by {time_diff}, which exceeds margin of {margin}. This might be due to timezone differences or AWS SDK behavior."
-
-    return result
 
 @pytest.mark.skipif(not (settings.S3_STORAGE_ENABLED and settings.CLOUDFRONT_ENABLED), 
                    reason="S3 storage or CloudFront is disabled")
