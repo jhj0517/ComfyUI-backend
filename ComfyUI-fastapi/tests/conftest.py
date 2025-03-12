@@ -8,8 +8,6 @@ import dotenv
 import pytest
 
 comfyui_fastapi_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if comfyui_fastapi_dir not in sys.path:
-    sys.path.insert(0, comfyui_fastapi_dir)
 
 env_path = os.path.join(comfyui_fastapi_dir, '.env')
 dotenv.load_dotenv(env_path)

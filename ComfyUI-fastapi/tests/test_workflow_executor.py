@@ -9,8 +9,8 @@ from .conftest import comfyui_fastapi_dir
 
 def test_load_workflow():
     """Test loading a valid workflow file"""
-    workflow_path = os.path.join(comfyui_fastapi_dir, "workflows","basic.json")
-    assert os.path.exists(workflow_path), "Workflow file does not exist"
+    workflow_path = Path(os.path.join(comfyui_fastapi_dir, "workflows","basic.json"))
+    assert workflow_path.exists(), "Workflow file does not exist"
 
     executor = WorkflowExecutor(workflow_path)
     assert executor.workflow is not None
