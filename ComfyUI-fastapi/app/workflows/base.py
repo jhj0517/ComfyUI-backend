@@ -16,7 +16,7 @@ class WorkflowExecutor:
     def _load_workflow(self) -> Dict[str, Any]:
         """Load workflow from JSON file"""
         try:
-            with open(self.workflow_path, 'r') as f:
+            with open(self.workflow_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except json.JSONDecodeError as e:
             raise WorkflowValidationError(f"Invalid workflow JSON: {str(e)}")
