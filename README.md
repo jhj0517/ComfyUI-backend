@@ -48,7 +48,7 @@ docker compose -f docker/docker-compose.yml build
 docker compose -f docker/docker-compose.yml up
 ```
 
-7. **Access with**
+7. **Access, Test with**
 - ComfyUI: http://localhost:8188 
 - FastAPI Backend: http://localhost:8000/docs (or your domain name with nginx)
 
